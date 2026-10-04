@@ -1,6 +1,16 @@
 # Forge
 
-An iOS training log for lifting cycles, daily bodyweight work, step goals and personal challenges. Built with SwiftUI and SwiftData.
+**Lift, run, and show up every day.**
+
+Forge is a training log for lifting cycles, running plans, daily bodyweight work, stretching, step goals and personal challenges, with progress charts and habit grids that make consistency visible. Built with SwiftUI and SwiftData.
+
+<p align="center">
+  <img src="assets/screenshots/6.9-inch/02-today.png" width="160" alt="Today">
+  <img src="assets/screenshots/6.9-inch/03-training-strength.png" width="160" alt="Strength training">
+  <img src="assets/screenshots/6.9-inch/04-training-running.png" width="160" alt="Running">
+  <img src="assets/screenshots/6.9-inch/05-progress-activity.png" width="160" alt="Activity">
+  <img src="assets/screenshots/6.9-inch/06-progress-charts.png" width="160" alt="Charts">
+</p>
 
 Forge was previously released as **Strength Cycles**. It keeps the same bundle identifier (`mpbunce.Strength-Cycles`) so existing installs update in place and keep their data.
 
@@ -16,7 +26,8 @@ The home tab for the current day.
   - *Sets*: a fixed number of sets of a fixed number of reps.
 
   Log reps with the quick-add button or set an exact count. Logs reset each day.
-- **Challenges**: one-off goals you tick off when done. Start from presets (Villain Challenge stages, 20-Minute Aerobic Solution, 60s dead hang) or write your own.
+- **Stretching**: guided routines such as DeFranco's Agile 8, a quick 5 Stretches, and Starting Stretching levels, logged once a day.
+- **Challenges**: one-off goals you tick off when done. Start from presets (Villain Challenge stages, 60s dead hang, 100 push-ups in one set, 20 strict pull-ups, Murph, Deck of Cards, 10,000 swings and more) or write your own.
 
 ### Training
 - Start a cycle from a built-in program: 5/3/1, 5/3/1 Boring But Big, nSuns (4, 5 and 6 day), Greyskull LP, Menzer, Arnold Split, Push Pull Legs, or Upper Lower (4 and 5 day).
