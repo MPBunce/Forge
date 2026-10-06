@@ -32,7 +32,7 @@ extension ProgramType {
         case .fiveThreeOneBBBProgram:
             "5/3/1 with Boring But Big: the same main-lift sets, followed by 5 sets of 10 at a lighter weight to build size. Four days a week over 4-week cycles, with a deload in week 4. Raise your training maxes after each cycle."
         case .greySkull:
-            "John Sheaffer's Greyskull LP, a beginner linear progression. Three full-body days a week alternating two workouts. Main lifts are 2 sets of 5 and a last set of as many reps as you can; add weight each session, and reset by 10% if you stall."
+            "John Sheaffer's Greyskull LP, a beginner linear progression. Three full-body days a week. Upper-body days alternate bench and row with overhead press and pull-ups, while the lower-body lift runs squat, deadlift, squat each week. Main lifts are 2 sets of 5 and a last set of as many reps as you can (deadlift is one set); add weight each session, and reset by 10% if you stall."
         case .arnoldProgram:
             "Arnold Schwarzenegger's classic split: chest and back, shoulders and arms, then legs, run twice through the week with Sunday off. High volume with lots of sets per muscle, so it suits lifters with some experience and time to recover."
         case .menzer:

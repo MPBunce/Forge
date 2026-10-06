@@ -16,256 +16,57 @@ class GreyskullLPProgram: ProgramProtocol {
         return trainingDays.map { $0.copy() }
     }
     
+    /// Greyskull LP over two weeks. The upper-body days alternate A (bench, row) and
+    /// B (overhead press, pull-up), while the lower-body lift runs squat, deadlift, squat
+    /// every week on its own, so each lower lift lands on both upper days over time.
     init() {
-        self.trainingDays = [
-            // Week 1 - Day 1 (W1.1)
-            TrainingDay(
-                dayIndex: 0,
-                dayName: "Week 1 - Day 1 (W1.1)",
-                day: [
-                    Exercise(
-                        exerciseIndex: 0,
-                        name: "Bench Press",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 1,
-                        name: "Squat",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 2,
-                        name: "Barbell Row",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 3,
-                        name: "Bicep Curl",
-                        sets: SetScheme.straight(3, reps: 12)
-                    ),
-                    Exercise(
-                        exerciseIndex: 4,
-                        name: "Tricep Pushdown",
-                        sets: SetScheme.straight(3, reps: 12)
-                    ),
-                    Exercise(
-                        exerciseIndex: 5,
-                        name: "Abs",
-                        sets: SetScheme.straight(3, reps: 15)
-                    )
-                ],
-                completedDate: nil
-            ),
-            
-            // Week 1 - Day 2 (W1.2)
-            TrainingDay(
-                dayIndex: 1,
-                dayName: "Week 1 - Day 2 (W1.2)",
-                day: [
-                    Exercise(
-                        exerciseIndex: 0,
-                        name: "Overhead Press",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 1,
-                        name: "Weighted Pullup",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 2,
-                        name: "Deadlift",
-                        sets: SetScheme.lastSetAmrap(1, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 3,
-                        name: "Lateral Raise",
-                        sets: SetScheme.straight(3, reps: 15)
-                    ),
-                    Exercise(
-                        exerciseIndex: 4,
-                        name: "Rear Delt",
-                        sets: SetScheme.straight(3, reps: 15)
-                    ),
-                    Exercise(
-                        exerciseIndex: 5,
-                        name: "Split Squat",
-                        sets: SetScheme.straight(3, reps: 10)
-                    ),
-                    Exercise(
-                        exerciseIndex: 6,
-                        name: "Abs",
-                        sets: SetScheme.straight(3, reps: 15)
-                    )
-                ],
-                completedDate: nil
-            ),
-            
-            // Week 1 - Day 3 (W1.1)
-            TrainingDay(
-                dayIndex: 2,
-                dayName: "Week 1 - Day 3 (W1.1)",
-                day: [
-                    Exercise(
-                        exerciseIndex: 0,
-                        name: "Bench Press",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 1,
-                        name: "Squat",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 2,
-                        name: "Barbell Row",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 3,
-                        name: "Bicep Curl",
-                        sets: SetScheme.straight(3, reps: 12)
-                    ),
-                    Exercise(
-                        exerciseIndex: 4,
-                        name: "Tricep Pushdown",
-                        sets: SetScheme.straight(3, reps: 12)
-                    ),
-                    Exercise(
-                        exerciseIndex: 5,
-                        name: "Abs",
-                        sets: SetScheme.straight(3, reps: 15)
-                    )
-                ],
-                completedDate: nil
-            ),
-            
-            // Week 2 - Day 1 (W1.2)
-            TrainingDay(
-                dayIndex: 3,
-                dayName: "Week 2 - Day 1 (W1.2)",
-                day: [
-                    Exercise(
-                        exerciseIndex: 0,
-                        name: "Overhead Press",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 1,
-                        name: "Weighted Pullup",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 2,
-                        name: "Deadlift",
-                        sets: SetScheme.lastSetAmrap(1, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 3,
-                        name: "Lateral Raise",
-                        sets: SetScheme.straight(3, reps: 15)
-                    ),
-                    Exercise(
-                        exerciseIndex: 4,
-                        name: "Rear Delt",
-                        sets: SetScheme.straight(3, reps: 15)
-                    ),
-                    Exercise(
-                        exerciseIndex: 5,
-                        name: "Split Squat",
-                        sets: SetScheme.straight(3, reps: 10)
-                    ),
-                    Exercise(
-                        exerciseIndex: 6,
-                        name: "Abs",
-                        sets: SetScheme.straight(3, reps: 15)
-                    )
-                ],
-                completedDate: nil
-            ),
-            
-            // Week 2 - Day 2 (W1.1)
-            TrainingDay(
-                dayIndex: 4,
-                dayName: "Week 2 - Day 2 (W1.1)",
-                day: [
-                    Exercise(
-                        exerciseIndex: 0,
-                        name: "Bench Press",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 1,
-                        name: "Squat",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 2,
-                        name: "Barbell Row",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 3,
-                        name: "Bicep Curl",
-                        sets: SetScheme.straight(3, reps: 12)
-                    ),
-                    Exercise(
-                        exerciseIndex: 4,
-                        name: "Tricep Pushdown",
-                        sets: SetScheme.straight(3, reps: 12)
-                    ),
-                    Exercise(
-                        exerciseIndex: 5,
-                        name: "Abs",
-                        sets: SetScheme.straight(3, reps: 15)
-                    )
-                ],
-                completedDate: nil
-            ),
-            
-            // Week 2 - Day 3 (W1.2)
-            TrainingDay(
-                dayIndex: 5,
-                dayName: "Week 2 - Day 3 (W1.2)",
-                day: [
-                    Exercise(
-                        exerciseIndex: 0,
-                        name: "Overhead Press",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 1,
-                        name: "Weighted Pullup",
-                        sets: SetScheme.lastSetAmrap(3, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 2,
-                        name: "Deadlift",
-                        sets: SetScheme.lastSetAmrap(1, reps: 5)
-                    ),
-                    Exercise(
-                        exerciseIndex: 3,
-                        name: "Lateral Raise",
-                        sets: SetScheme.straight(3, reps: 15)
-                    ),
-                    Exercise(
-                        exerciseIndex: 4,
-                        name: "Rear Delt",
-                        sets: SetScheme.straight(3, reps: 15)
-                    ),
-                    Exercise(
-                        exerciseIndex: 5,
-                        name: "Split Squat",
-                        sets: SetScheme.straight(3, reps: 10)
-                    ),
-                    Exercise(
-                        exerciseIndex: 6,
-                        name: "Abs",
-                        sets: SetScheme.straight(3, reps: 15)
-                    )
-                ],
+        enum Upper { case a, b }
+        enum Lower { case squat, deadlift }
+        let schedule: [(Upper, Lower)] = [
+            (.a, .squat), (.b, .deadlift), (.a, .squat),
+            (.b, .squat), (.a, .deadlift), (.b, .squat),
+        ]
+
+        self.trainingDays = schedule.enumerated().map { index, pair in
+            let (upper, lower) = pair
+            var exercises: [(String, [ExerciseSet])] = []
+            switch upper {
+            case .a:
+                exercises.append(("Bench Press", SetScheme.lastSetAmrap(3, reps: 5)))
+                exercises.append(("Barbell Row", SetScheme.lastSetAmrap(3, reps: 5)))
+            case .b:
+                exercises.append(("Overhead Press", SetScheme.lastSetAmrap(3, reps: 5)))
+                exercises.append(("Weighted Pullup", SetScheme.lastSetAmrap(3, reps: 5)))
+            }
+            switch lower {
+            case .squat:
+                exercises.append(("Squat", SetScheme.lastSetAmrap(3, reps: 5)))
+            case .deadlift:
+                exercises.append(("Deadlift", SetScheme.lastSetAmrap(1, reps: 5)))
+            }
+            switch upper {
+            case .a:
+                exercises.append(("Bicep Curl", SetScheme.straight(3, reps: 12)))
+                exercises.append(("Tricep Pushdown", SetScheme.straight(3, reps: 12)))
+            case .b:
+                exercises.append(("Lateral Raise", SetScheme.straight(3, reps: 15)))
+                exercises.append(("Rear Delt", SetScheme.straight(3, reps: 15)))
+            }
+            if lower == .deadlift {
+                exercises.append(("Split Squat", SetScheme.straight(3, reps: 10)))
+            }
+            exercises.append(("Abs", SetScheme.straight(3, reps: 15)))
+
+            let week = index / 3 + 1, day = index % 3 + 1
+            let title = "Week \(week) · Day \(day): \(exercises[0].0), \(lower == .squat ? "Squat" : "Deadlift")"
+            return TrainingDay(
+                dayIndex: index,
+                dayName: title,
+                day: exercises.enumerated().map { i, item in
+                    Exercise(exerciseIndex: i, name: item.0, sets: item.1)
+                },
                 completedDate: nil
             )
-        ]
+        }
     }
 }
