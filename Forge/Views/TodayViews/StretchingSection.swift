@@ -116,42 +116,56 @@ private struct StretchRoutineRow: View {
     }
 }
 
-/// The stretches in a routine, with a button to mark it done.
+/// The stretches in a routine: tap one for how to do it, or follow along through all of them.
 private struct StretchRoutineDetail: View {
     @Environment(\.dismiss) private var dismiss
     let routine: StretchRoutine
     let isDone: Bool
     let onToggle: () -> Void
+    @State private var followingAlong = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
+                    Button {
+                        followingAlong = true
+                    } label: {
+                        Label("Follow Along", systemImage: "play.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                } footer: {
+                    Text("Goes through each stretch one at a time, with the steps and a timer.")
+                }
+
+                Section {
                     ForEach(Array(routine.stretches.enumerated()), id: \.offset) { index, stretch in
-                        HStack(alignment: .firstTextBaseline, spacing: 12) {
-                            Text("\(index + 1)")
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
-                                .frame(width: 20)
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(alignment: .firstTextBaseline) {
+                        NavigationLink {
+                            StretchDetailView(stretch: stretch, number: index + 1)
+                        } label: {
+                            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                                Text("\(index + 1)")
+                                    .font(.subheadline.monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 20)
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text(stretch.name)
-                                    Spacer()
-                                    Text(stretch.hold)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .multilineTextAlignment(.trailing)
-                                }
-                                if !stretch.detail.isEmpty {
-                                    Text(stretch.detail)
+                                    Text(stretch.hold + (stretch.sides == 2 && !stretch.hold.contains("each") ? " each side" : ""))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
                             }
                         }
                     }
+                } header: {
+                    Text("Stretches")
                 } footer: {
-                    Text([routine.summary + ". About \(routine.minutes) minutes.", routine.source]
+                    Text(["Tap a stretch to see how to do it.", routine.summary + ". About \(routine.minutes) minutes.", routine.source]
                         .filter { !$0.isEmpty }
                         .joined(separator: "\n\n"))
                 }
@@ -171,6 +185,11 @@ private struct StretchRoutineDetail: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }.fontWeight(.semibold)
+                }
+            }
+            .fullScreenCover(isPresented: $followingAlong) {
+                StretchFollowAlong(routine: routine) {
+                    if !isDone { onToggle() }
                 }
             }
         }
