@@ -242,8 +242,25 @@ struct ModernSetRowView: View {
                 .monospacedDigit()
                 .frame(width: 16)
             
-            SetDisplayValues(set: set)
-            
+            // Tap the numbers to change them.
+            if set.isEditable || set.isAmrap {
+                Button(action: onEdit) {
+                    HStack(spacing: 6) {
+                        SetDisplayValues(set: set)
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.tertiarySystemFill)))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Edit weight and reps")
+            } else {
+                SetDisplayValues(set: set)
+            }
+
             Spacer(minLength: 0)
             
             SetActionsMenu(
@@ -375,148 +392,177 @@ struct SetActionsMenu: View {
     }
 }
 
-// MARK: - Shared sheet layout
-// Confirm/Cancel live in the navigation bar so the number pad (which has no return key)
-// can never cover them.
-private struct SetSheet<Content: View>: View {
+// MARK: - Set editor
+// Weight and reps as big numbers with − and + buttons (weight steps by a pair of the
+// smallest plates), so logging a set is a couple of taps. Tap a number to type it instead.
+
+private struct SetEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.weightUnit) private var unit
+    @Environment(\.weightStep) private var step
+    @Environment(\.weightStart) private var start
+
     let title: String
     let confirmTitle: String
-    let confirmDisabled: Bool
-    let onConfirm: () -> Void
-    let onCancel: () -> Void
-    @ViewBuilder let content: Content
-    
+    var weightEditable = true
+    var repsEditable = true
+    var repsLabel = "Reps"
+    var targetReps: Int? = nil
+    var note: String? = nil
+    @State var weight: Double?
+    @State var reps: Int?
+    let onSave: (Double?, Int?) -> Void
+    var onCancel: (() -> Void)? = nil
+
+    @State private var weightText = ""
+    @State private var repsText = ""
+    @FocusState private var focused: Field?
+    enum Field { case weight, reps }
+
     var body: some View {
         NavigationStack {
-            Form { content }
-                .navigationTitle(title)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", action: onCancel)
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(confirmTitle, action: onConfirm)
-                            .fontWeight(.semibold)
-                            .disabled(confirmDisabled)
-                    }
+            VStack(spacing: 22) {
+                if let note {
+                    Label(note, systemImage: "lock.fill")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
+                stepperRow(label: "Weight (\(unit))", text: $weightText, field: .weight, editable: weightEditable,
+                           keyboard: .decimalPad,
+                           minus: { adjustWeight(-step) }, plus: { adjustWeight(step) })
+                stepperRow(label: repsLabel, text: $repsText, field: .reps, editable: repsEditable,
+                           keyboard: .numberPad,
+                           minus: { adjustReps(-1) }, plus: { adjustReps(1) })
+                if let target = targetReps {
+                    let done = Int(repsText)
+                    Label(done == nil ? "Target \(target)+ reps" : (done! >= target ? "Target reached" : "Below the \(target)+ target"),
+                          systemImage: done == nil ? "target" : (done! >= target ? "checkmark.circle.fill" : "xmark.circle.fill"))
+                        .font(.subheadline)
+                        .foregroundStyle(done == nil ? Color.secondary : (done! >= target ? Color.green : Color.red))
+                }
+                Spacer(minLength: 0)
+                Button {
+                    save()
+                } label: {
+                    Text(confirmTitle)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+                .disabled(!isValid)
+            }
+            .padding(20)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { onCancel?() ?? dismiss() }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { focused = nil }.fontWeight(.semibold)
+                }
+            }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.height(targetReps == nil ? 340 : 380), .large])
         .presentationDragIndicator(.visible)
+        .onAppear {
+            weightText = weight.map { WeightConverter.format($0) } ?? ""
+            repsText = reps.map(String.init) ?? ""
+        }
+    }
+
+    private var isValid: Bool {
+        (weightText.isEmpty || Double(weightText) != nil) && (repsText.isEmpty || Int(repsText) != nil)
+            && (targetReps == nil || Int(repsText) != nil)
+    }
+
+    private func save() {
+        onSave(Double(weightText), Int(repsText))
+        if onCancel == nil { dismiss() }
+    }
+
+    private func adjustWeight(_ delta: Double) {
+        // A blank weight jumps straight to a sensible starting point instead of 0.
+        guard let current = Double(weightText) else {
+            weightText = WeightConverter.format(start)
+            return
+        }
+        let next = max(0, ((current + delta) * 100).rounded() / 100)
+        weightText = WeightConverter.format(next)
+    }
+
+    private func adjustReps(_ delta: Int) {
+        repsText = String(max(0, (Int(repsText) ?? 0) + delta))
+    }
+
+    private func stepperRow(label: String, text: Binding<String>, field: Field, editable: Bool,
+                            keyboard: UIKeyboardType, minus: @escaping () -> Void, plus: @escaping () -> Void) -> some View {
+        VStack(spacing: 6) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            HStack(spacing: 16) {
+                roundButton("minus", action: minus).disabled(!editable)
+                TextField("—", text: text)
+                    .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
+                    .multilineTextAlignment(.center)
+                    .keyboardType(keyboard)
+                    .focused($focused, equals: field)
+                    .disabled(!editable)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityLabel(label)
+                roundButton("plus", action: plus).disabled(!editable)
+            }
+        }
+        .opacity(editable ? 1 : 0.5)
+    }
+
+    private func roundButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.title2.weight(.semibold))
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(Color(.tertiarySystemFill)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(symbol == "plus" ? "Increase" : "Decrease")
     }
 }
 
 // MARK: - Add Set View
 struct AddSetView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.weightUnit) private var unit
-    @State private var weight: String = ""
-    @State private var reps: String = ""
-    @FocusState private var focusedField: Field?
-    
     let onAdd: (Double?, Int?) -> Void
-    
-    enum Field {
-        case weight, reps
-    }
-    
-    private var isValid: Bool {
-        (!reps.isEmpty || !weight.isEmpty)
-            && (reps.isEmpty || Int(reps) != nil)
-            && (weight.isEmpty || Double(weight) != nil)
-    }
-    
+
     var body: some View {
-        SetSheet(
-            title: "Add Set",
-            confirmTitle: "Add",
-            confirmDisabled: !isValid,
-            onConfirm: {
-                onAdd(Double(weight), Int(reps))
-                dismiss()
-            },
-            onCancel: { dismiss() }
-        ) {
-            LabeledContent("Reps") {
-                TextField("0", text: $reps)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.trailing)
-                    .focused($focusedField, equals: .reps)
-            }
-            LabeledContent("Weight (\(unit))") {
-                TextField("Optional", text: $weight)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .focused($focusedField, equals: .weight)
-            }
-        }
-        .onAppear { focusedField = .reps }
+        SetEditor(title: "Add Set", confirmTitle: "Add Set", weight: nil, reps: nil, onSave: onAdd)
     }
 }
 
 // MARK: - Regular Set Edit View
 struct EditRegularSetView: View {
-    @Environment(\.weightUnit) private var unit
-    @State private var weight: String
-    @State private var reps: String
-    @FocusState private var focusedField: Field?
-    
+    let initialWeight: Double?
+    let initialReps: Int?
     let isEditable: Bool
     let onSave: (Double?, Int?) -> Void
     let onCancel: () -> Void
-    
-    enum Field {
-        case weight, reps
-    }
-    
+
     init(initialWeight: Double?, initialReps: Int?, isEditable: Bool, onSave: @escaping (Double?, Int?) -> Void, onCancel: @escaping () -> Void) {
+        self.initialWeight = initialWeight
+        self.initialReps = initialReps
         self.isEditable = isEditable
         self.onSave = onSave
         self.onCancel = onCancel
-        self._weight = State(initialValue: initialWeight.map { WeightConverter.format($0) } ?? "")
-        self._reps = State(initialValue: initialReps.map { "\($0)" } ?? "")
     }
-    
-    private var isValid: Bool {
-        isEditable
-            && (reps.isEmpty || Int(reps) != nil)
-            && (weight.isEmpty || Double(weight) != nil)
-    }
-    
+
     var body: some View {
-        SetSheet(
-            title: "Edit Set",
-            confirmTitle: "Save",
-            confirmDisabled: !isValid,
-            onConfirm: {
-                onSave(weight.isEmpty ? nil : Double(weight), reps.isEmpty ? nil : Int(reps))
-            },
-            onCancel: onCancel
-        ) {
-            if !isEditable {
-                Label("This set is set by the program and can't be edited", systemImage: "lock.fill")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            LabeledContent("Reps") {
-                TextField("0", text: $reps)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.trailing)
-                    .focused($focusedField, equals: .reps)
-                    .disabled(!isEditable)
-            }
-            LabeledContent("Weight (\(unit))") {
-                TextField("Optional", text: $weight)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .focused($focusedField, equals: .weight)
-                    .disabled(!isEditable)
-            }
-        }
-        .onAppear {
-            if isEditable { focusedField = .reps }
-        }
+        SetEditor(title: "Edit Set", confirmTitle: "Save",
+                  weightEditable: isEditable, repsEditable: isEditable,
+                  note: isEditable ? nil : "Set by the program",
+                  weight: initialWeight, reps: initialReps,
+                  onSave: onSave, onCancel: onCancel)
     }
 }
 
@@ -551,71 +597,26 @@ struct EditSetSheetView: View {
 
 // MARK: - AMRAP Set Edit View
 struct EditAmrapSetView: View {
-    @Environment(\.weightUnit) private var unit
-    @State private var actualReps: String
-    @State private var weightText: String
-    @FocusState private var isTextFieldFocused: Bool
-    
+    let initialReps: Int?
     let weight: Double?
     let isWeightEditable: Bool
     let targetReps: Int?
     let onSave: (Int?, Double?) -> Void
     let onCancel: () -> Void
-    
+
     init(initialReps: Int?, weight: Double?, isWeightEditable: Bool, targetReps: Int?, onSave: @escaping (Int?, Double?) -> Void, onCancel: @escaping () -> Void) {
+        self.initialReps = initialReps
         self.weight = weight
         self.isWeightEditable = isWeightEditable
         self.targetReps = targetReps
         self.onSave = onSave
         self.onCancel = onCancel
-        self._actualReps = State(initialValue: initialReps.map { "\($0)" } ?? "")
-        self._weightText = State(initialValue: weight.map { WeightConverter.format($0) } ?? "")
     }
-    
-    private var isValid: Bool {
-        Int(actualReps) != nil && (weightText.isEmpty || Double(weightText) != nil)
-    }
-    
+
     var body: some View {
-        SetSheet(
-            title: "AMRAP Set",
-            confirmTitle: "Save",
-            confirmDisabled: !isValid,
-            onConfirm: { onSave(Int(actualReps), isWeightEditable ? Double(weightText) : weight) },
-            onCancel: onCancel
-        ) {
-            Section {
-                if isWeightEditable {
-                    LabeledContent("Weight (\(unit))") {
-                        TextField("Optional", text: $weightText)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                    }
-                } else if let w = weight {
-                    LabeledContent("Weight", value: "\(WeightConverter.format(w)) \(unit)")
-                }
-                if let target = targetReps {
-                    LabeledContent("Target", value: "\(target)+ reps")
-                }
-            } footer: {
-                Text("As many reps as possible with good form.")
-            }
-            
-            Section {
-                LabeledContent("Reps achieved") {
-                    TextField("0", text: $actualReps)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .focused($isTextFieldFocused)
-                }
-                if let target = targetReps, let current = Int(actualReps) {
-                    Label(current >= target ? "Target achieved" : "Below target",
-                          systemImage: current >= target ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(current >= target ? .green : .red)
-                }
-            }
-        }
-        .onAppear { isTextFieldFocused = true }
+        SetEditor(title: "As Many Reps As Possible", confirmTitle: "Save",
+                  weightEditable: isWeightEditable, repsLabel: "Reps done", targetReps: targetReps,
+                  weight: weight, reps: initialReps ?? targetReps,
+                  onSave: { w, r in onSave(r, isWeightEditable ? w : weight) }, onCancel: onCancel)
     }
 }

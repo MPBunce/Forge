@@ -11,6 +11,10 @@ import SwiftData
 extension EnvironmentValues {
     /// Unit label ("lbs" or "kg") for the weights currently on screen.
     @Entry var weightUnit: String = "lbs"
+    /// How much one tap of + or − changes a weight: a pair of the smallest plates.
+    @Entry var weightStep: Double = 5
+    /// Where + starts from when a set has no weight yet (the last weight used, or the bar).
+    @Entry var weightStart: Double = 45
 }
 
 // MARK: - Plate rounding

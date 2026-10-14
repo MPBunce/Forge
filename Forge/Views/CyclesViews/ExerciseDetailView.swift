@@ -17,6 +17,8 @@ struct ExerciseDetailView: View {
     let exerciseIndex: Int
 
     @Environment(\.modelContext) private var context
+    @State private var weightStep: Double = 5
+    @State private var weightStart: Double = 45
     @State private var showingAddSetSheet = false
     @State private var editingSet: ExerciseSet? = nil
 
@@ -45,6 +47,9 @@ struct ExerciseDetailView: View {
         .navigationTitle(exercise?.name ?? "")
         .navigationBarTitleDisplayMode(.large)
         .environment(\.weightUnit, cycle.weightUnit)
+        .environment(\.weightStep, weightStep)
+        .environment(\.weightStart, weightStart)
+        .onAppear(perform: loadWeightStep)
         .sheet(isPresented: $showingAddSetSheet) {
             AddSetView { weight, reps in
                 addSet(weight: weight, reps: reps)
@@ -62,6 +67,25 @@ struct ExerciseDetailView: View {
                 onCancel: { editingSet = nil }
             )
         }
+    }
+
+    /// A pair of the smallest plates, in the cycle's unit. Read once when the screen opens.
+    private func loadWeightStep() {
+        let settings = (try? context.fetch(FetchDescriptor<Settings>()))?.first
+        let plate = cycle.usesKilograms ? (settings?.smallestPlateKg ?? 1.25) : (settings?.smallestPlateLbs ?? 2.5)
+        weightStep = plate * 2
+        let bar = cycle.usesKilograms ? (settings?.barbellKg ?? 20) : (settings?.barbellLbs ?? 45)
+        weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastUsedWeight() ?? bar
+    }
+
+    /// The most recent weight logged for this exercise in this cycle.
+    private func lastUsedWeight() -> Double? {
+        guard let name = exercise?.name else { return nil }
+        return cycle.trainingDays
+            .sorted { $0.dayIndex > $1.dayIndex }
+            .lazy
+            .compactMap { day in day.day.first { $0.name == name }?.orderedSets.compactMap(\.weight).last }
+            .first
     }
 
     private func addSet(weight: Double?, reps: Int?) {

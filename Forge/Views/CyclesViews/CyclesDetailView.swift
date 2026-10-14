@@ -7,7 +7,7 @@ struct CyclesDetailView: View {
     private var cycles: [Cycles]
 
     let cycleId: UUID
-    @State private var selectedDayIndex: Int = 0
+    @State private var selectedDayIndex: Int = -1
     @State private var addingExercise = false
     @State private var showingPlus = false
     private var plus = ForgePlus.shared
@@ -45,7 +45,9 @@ struct CyclesDetailView: View {
                     if cycle.trainingDays.isEmpty {
                         emptyStateView
                     } else {
-                        daySelectionDropdown(for: cycle)
+                        DayStrip(days: sortedTrainingDays(for: cycle), selected: validSelectedDayIndex) {
+                            selectedDayIndex = $0
+                        }
                         exercisesList(for: cycle)
                     }
                 }
@@ -57,6 +59,13 @@ struct CyclesDetailView: View {
         .navigationTitle(cycle?.template ?? "Cycle Detail")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showingPlus) { ForgePlusView() }
+        .onAppear {
+            // Open on the next day to do.
+            if selectedDayIndex < 0, let cycle {
+                let days = sortedTrainingDays(for: cycle)
+                selectedDayIndex = (days.first { $0.completedDate == nil } ?? days.last)?.dayIndex ?? 0
+            }
+        }
     }
 
     private var emptyStateView: some View {
@@ -81,95 +90,27 @@ struct CyclesDetailView: View {
         )
     }
 
-    private func daySelectionDropdown(for cycle: Cycles) -> some View {
-        HStack {
-            Image(systemName: "calendar")
-                .foregroundColor(.blue)
-                .font(.title3)
-            
-            Text("Training Day:")
-                .font(.headline)
-                .foregroundColor(.primary)
-            
-            Spacer()
-            
-            Menu {
-                ForEach(sortedTrainingDays(for: cycle), id: \.dayIndex) { day in
-                    Button(action: {
-                        selectedDayIndex = day.dayIndex
-                    }) {
-                        HStack {
-                            Text(dayLabel(day))
-                            
-                            if validSelectedDayIndex == day.dayIndex {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    if let selectedDay = cycle.trainingDays.first(where: { $0.dayIndex == validSelectedDayIndex }) {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("Day \(selectedDay.dayIndex + 1)")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
-                            if selectedDay.dayName != "Day \(selectedDay.dayIndex + 1)" {
-                                Text(selectedDay.dayName)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    } else {
-                        Text("Select Day")
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                    }
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-                .contentShape(Rectangle())
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .background(Color(.systemBackground))
-        .overlay(
-            Rectangle()
-                .frame(height: 0.5)
-                .foregroundColor(Color(.systemGray4)),
-            alignment: .bottom
-        )
-    }
-
     private func exercisesList(for cycle: Cycles) -> some View {
         List {
             if let selectedDay = cycle.trainingDays.first(where: { $0.dayIndex == validSelectedDayIndex }) {
                 Section(header:
-                    HStack {
-                        Text("\(selectedDay.dayName)")
-                            .font(.subheadline)
-                        
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(DayStrip.title(for: selectedDay))
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .textCase(nil)
+                            .lineLimit(2)
                         Spacer()
-                        
-                        Button(action: {
+                        Button {
                             toggleDayCompletion(selectedDay)
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: selectedDay.completedDate != nil ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(selectedDay.completedDate != nil ? .green : .blue)
-                                
-                                Text(selectedDay.completedDate != nil ? "Complete" : "Mark Complete")
-                                    .font(.caption)
-                                    .foregroundColor(selectedDay.completedDate != nil ? .green : .blue)
-                            }
+                        } label: {
+                            Label(selectedDay.completedDate != nil ? "Done" : "Mark Done",
+                                  systemImage: selectedDay.completedDate != nil ? "checkmark.circle.fill" : "circle")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(selectedDay.completedDate != nil ? Color.green : Color.accentColor)
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .buttonStyle(.plain)
+                        .textCase(nil)
                     }
                 ) {
                     ForEach(sortedExercises(for: selectedDay), id: \.exerciseIndex) { exercise in
@@ -363,5 +304,104 @@ private struct AddExerciseView: View {
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
+    }
+}
+
+/// Training days as a row of numbered buttons, grouped by week when the program has weeks,
+/// with a tick on finished days.
+private struct DayStrip: View {
+    let days: [TrainingDay]
+    let selected: Int
+    let onSelect: (Int) -> Void
+
+    private struct Group: Identifiable {
+        let id: Int
+        let title: String?
+        let days: [TrainingDay]
+    }
+
+    /// The week number in names like "Week 2 - Bench" or "Week 1 · Day 3: …".
+    static func week(of day: TrainingDay) -> Int? {
+        guard let range = day.dayName.range(of: #"^Week (\d+)"#, options: .regularExpression) else { return nil }
+        return Int(day.dayName[range].dropFirst(5))
+    }
+
+    /// The day's name without the week/day prefix the strip already shows.
+    static func title(for day: TrainingDay) -> String {
+        var name = day.dayName
+        for pattern in [#"^Week \d+\s*[·\-–]\s*Day \d+\s*[:\-–]?\s*"#, #"^Week \d+\s*[·\-–:]\s*"#] {
+            if let r = name.range(of: pattern, options: .regularExpression) { name.removeSubrange(r) }
+        }
+        let number = "Day \(day.dayIndex + 1)"
+        if name.isEmpty || name == number { return number }
+        return "\(number) · \(name)"
+    }
+
+    private var groups: [Group] {
+        let hasWeeks = days.contains { Self.week(of: $0) != nil }
+        guard hasWeeks else { return [Group(id: 0, title: nil, days: days)] }
+        var result: [Group] = []
+        for day in days {
+            let week = Self.week(of: day) ?? 0
+            if let last = result.last, last.id == week {
+                result[result.count - 1] = Group(id: week, title: last.title, days: last.days + [day])
+            } else {
+                result.append(Group(id: week, title: "Week \(week)", days: [day]))
+            }
+        }
+        return result
+    }
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .bottom, spacing: 18) {
+                    ForEach(groups) { group in
+                        VStack(alignment: .leading, spacing: 6) {
+                            if let title = group.title {
+                                Text(title)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            HStack(spacing: 8) {
+                                ForEach(group.days, id: \.dayIndex) { day in
+                                    chip(day).id(day.dayIndex)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+            }
+            .task(id: selected) { proxy.scrollTo(selected, anchor: .center) }
+        }
+        .background(Color(.systemBackground))
+        .overlay(alignment: .bottom) {
+            Rectangle().frame(height: 0.5).foregroundStyle(Color(.separator))
+        }
+    }
+
+    private func chip(_ day: TrainingDay) -> some View {
+        let isSelected = day.dayIndex == selected
+        let isDone = day.completedDate != nil
+        return Button {
+            onSelect(day.dayIndex)
+        } label: {
+            VStack(spacing: 3) {
+                Text("\(day.dayIndex + 1)")
+                    .font(.headline.monospacedDigit())
+                Image(systemName: isDone ? "checkmark" : "circle.fill")
+                    .font(.system(size: isDone ? 10 : 4, weight: .bold))
+                    .opacity(isDone ? 1 : 0.35)
+            }
+            .foregroundStyle(isSelected ? Color.white : (isDone ? Color.green : Color.primary))
+            .frame(width: 46, height: 52)
+            .background(RoundedRectangle(cornerRadius: 12)
+                .fill(isSelected ? Color.accentColor : Color(.secondarySystemBackground)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(Self.title(for: day))\(isDone ? ", done" : "")")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
