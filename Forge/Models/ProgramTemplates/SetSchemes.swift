@@ -27,4 +27,16 @@ enum SetScheme {
             )
         }
     }
+
+    /// `count` working sets, each taken to failure; `reps` is the target to beat.
+    static func toFailure(_ count: Int, reps: Int) -> [ExerciseSet] {
+        (0..<count).map { index in
+            ExerciseSet(setIndex: index, reps: reps, isEditable: true, isAmrap: true, amrapTargetReps: reps)
+        }
+    }
+
+    /// A single tick-off item, like a run, with no reps or weight to log.
+    static func session() -> [ExerciseSet] {
+        [ExerciseSet(setIndex: 0, reps: nil, isEditable: true)]
+    }
 }

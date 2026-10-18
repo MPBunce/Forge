@@ -87,6 +87,7 @@ enum ProgramType {
     case pushPullLegs
     case upperLowerFourDay
     case upperLowerFiveDay
+    case hybridUpperLower
 
     func createProgram(with settings: UserSettings) -> ProgramProtocol {
         switch self {
@@ -98,6 +99,8 @@ enum ProgramType {
             return UpperLowerProgram()
         case .upperLowerFiveDay:
             return FiveDayUpperLowerProgram()
+        case .hybridUpperLower:
+            return HybridUpperLowerProgram()
         case .nSuns4Days:
             return nSunsFourDayProgram(benchTM: settings.bench, squatTM: settings.squat, deadliftTM: settings.deadlift, ohpTM: settings.press)
         case .nSuns5Days:
@@ -213,6 +216,13 @@ extension Template {
                 description: "5-day split alternating upper and lower body",
                 duration: "5 days",
                 programType: .upperLowerFiveDay
+            ),
+            Template(
+                id: "hybrid_upper_lower",
+                name: "Hybrid Upper Lower",
+                description: "Low-volume lifting to failure, plus three runs a week",
+                duration: "7 days",
+                programType: .hybridUpperLower
             )
         ]
     }

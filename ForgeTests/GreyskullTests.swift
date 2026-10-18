@@ -20,3 +20,17 @@ struct GreyskullTests {
         #expect(squatDays.count == 2 && deadliftDays.count == 2)
     }
 }
+
+struct HybridUpperLowerTests {
+    @Test func weekLayoutAndVolume() {
+        let days = HybridUpperLowerProgram().trainingDays
+        #expect(days.map(\.dayName) == ["Mon · Lower A", "Tue · Easy Run", "Wed · Upper A", "Thu · Tempo Run",
+                                        "Fri · Lower B", "Sat · Long Run", "Sun · Upper B"])
+        let lowerA = days[0].day.reduce(0) { $0 + $1.sets.count }
+        let upperA = days[2].day.reduce(0) { $0 + $1.sets.count }
+        #expect(lowerA == 14)  // 2 squat + 4 quad + 4 ham + 4 glute
+        #expect(upperA == 15)  // 4 chest + 4 back + 3 shoulder + 4 arms
+        // Every lifting set is taken to failure.
+        #expect(days[0].day.allSatisfy { $0.sets.allSatisfy(\.isAmrap) })
+    }
+}
