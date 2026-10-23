@@ -5,11 +5,13 @@
 //  What Forge Plus includes, with buying and restoring it.
 //
 
+import StoreKit
 import SwiftUI
 
 struct ForgePlusView: View {
     @Bindable private var plus = ForgePlus.shared
     @Bindable private var store = PlusStore.shared
+    @State private var redeemingCode = false
 
     var body: some View {
         List {
@@ -57,6 +59,19 @@ struct ForgePlusView: View {
                         }
                     }
                     .disabled(store.isPurchasing || store.isRestoring)
+
+                    // Friends & family offer codes (or any App Store offer code) for Plus.
+                    Button {
+                        redeemingCode = true
+                    } label: {
+                        Text("Redeem a Code")
+                    }
+                    .disabled(store.isPurchasing || store.isRestoring)
+                    .offerCodeRedemption(isPresented: $redeemingCode) { _ in
+                        // The purchase also arrives through Transaction.updates; this just
+                        // makes sure Plus switches on right away.
+                        Task { await store.refreshEntitlement() }
+                    }
                 } footer: {
                     Text("A one-time purchase, not a subscription. It works on all your devices signed in with the same Apple Account.")
                 }
