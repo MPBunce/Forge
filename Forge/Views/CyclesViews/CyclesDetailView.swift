@@ -371,33 +371,43 @@ private struct DayStrip: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .bottom, spacing: 18) {
-                    ForEach(groups) { group in
-                        VStack(alignment: .leading, spacing: 6) {
-                            if let title = group.title {
-                                Text(title)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                            }
-                            HStack(spacing: 8) {
-                                ForEach(group.days, id: \.dayIndex) { day in
-                                    chip(day).id(day.dayIndex)
-                                }
-                            }
-                        }
-                    }
+        // Centered when every day fits on screen; scrolls (keeping the selected day in view)
+        // when there are too many.
+        ViewThatFits(in: .horizontal) {
+            strip
+                .frame(maxWidth: .infinity)
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    strip
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .task(id: selected) { proxy.scrollTo(selected, anchor: .center) }
             }
-            .task(id: selected) { proxy.scrollTo(selected, anchor: .center) }
         }
         .background(Color(.systemBackground))
         .overlay(alignment: .bottom) {
             Rectangle().frame(height: 0.5).foregroundStyle(Color(.separator))
         }
+    }
+
+    private var strip: some View {
+        HStack(alignment: .bottom, spacing: 18) {
+            ForEach(groups) { group in
+                VStack(alignment: .leading, spacing: 6) {
+                    if let title = group.title {
+                        Text(title)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack(spacing: 8) {
+                        ForEach(group.days, id: \.dayIndex) { day in
+                            chip(day).id(day.dayIndex)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
     }
 
     private func chip(_ day: TrainingDay) -> some View {
