@@ -53,7 +53,7 @@ extension ProgramType {
         case .upperLowerFiveDay:
             "An upper and lower split over five days with an extra upper day, for more chest, back and arm volume. Add weight when you hit the top of the rep range."
         case .hybridUpperLower:
-            "Low-volume, high-intensity lifting for runners. Lower on Monday and Friday, upper on Wednesday and Sunday. Pair it with the Hybrid Runs plan in Training › Running for an easy run Tuesday, a tempo run Thursday and a long run Saturday. Every working set goes to failure: about 4 sets per muscle group (2 squat, 4 quads, 4 hamstrings, 4 glutes; 4 chest, 4 back, 3 shoulders, 4 arms). Warm up first, then aim for 6+ reps on compounds and 10+ on isolation work. When you beat the target, add weight next time."
+            "Low-volume, high-intensity lifting for runners. Lower on Monday and Friday, upper on Wednesday and Sunday. Pair it with the Hybrid Runs plan in Training › Running for an easy run Tuesday, a tempo run Thursday and a long run Saturday. Five exercises a day, every working set to failure: about 4 sets per muscle group (2 squat, 4 quads, 4 hamstrings, 4 glutes; 4 chest, 4 back, 3 shoulders, 4 arms). Warm up first, then aim for 8+ reps on compounds and 12+ on accessories. When you beat the target, add weight next time."
         }
     }
 }

@@ -26,45 +26,38 @@ final class HybridUpperLowerProgram: ProgramProtocol {
     }
 
     init() {
-        // Compounds aim for 6+ reps to failure, isolation work for 10+.
-        let heavy = { (sets: Int) in SetScheme.toFailure(sets, reps: 6) }
-        let light = { (sets: Int) in SetScheme.toFailure(sets, reps: 10) }
+        // Compounds aim for 8+ reps to failure, accessories for 12+.
+        let heavy = { (sets: Int) in SetScheme.toFailure(sets, reps: 8) }
+        let light = { (sets: Int) in SetScheme.toFailure(sets, reps: 12) }
 
+        // Five exercises a day. Lower: 2 squat, 4 quad, 4 hamstring, 4 glute.
+        // Upper: 4 push, 4 pull, 3 lateral raise, 4 arms.
         trainingDays = [
             Self.day(0, "Mon · Lower A", [
                 ("Squat", heavy(2)),
-                ("Leg Press", heavy(2)),
-                ("Leg Extension", light(2)),
+                ("Leg Extension", light(4)),
                 ("Romanian Deadlift", heavy(2)),
                 ("Lying Leg Curl", light(2)),
-                ("Hip Thrust", heavy(2)),
-                ("Hip Abduction", light(2)),
+                ("Hip Thrust", heavy(4)),
             ]),
             Self.day(1, "Wed · Upper A", [
-                ("Incline Dumbbell Press", heavy(2)),
-                ("Machine Chest Press", heavy(2)),
-                ("Lat Pulldown", heavy(2)),
-                ("Chest-Supported Row", heavy(2)),
+                ("Incline Dumbbell Press", heavy(4)),
+                ("Lat Pulldown", heavy(4)),
                 ("Lateral Raise", light(3)),
                 ("Incline Dumbbell Curl", light(2)),
                 ("Tricep Pushdown", light(2)),
             ]),
             Self.day(2, "Fri · Lower B", [
                 ("Squat", heavy(2)),
-                ("Hack Squat", heavy(2)),
-                ("Leg Extension", light(2)),
-                ("Seated Leg Curl", light(2)),
+                ("Leg Press", heavy(4)),
                 ("Stiff-Leg Deadlift", heavy(2)),
-                ("Bulgarian Split Squat", heavy(2)),
-                ("Cable Glute Kickback", light(2)),
+                ("Seated Leg Curl", light(2)),
+                ("Cable Glute Kickback", light(4)),
             ]),
             Self.day(3, "Sun · Upper B", [
-                ("Bench Press", heavy(2)),
-                ("Cable Fly", light(2)),
-                ("Pull-up", heavy(2)),
-                ("Seated Cable Row", heavy(2)),
-                ("Shoulder Press", heavy(1)),
-                ("Lateral Raise", light(2)),
+                ("Bench Press", heavy(4)),
+                ("Chest-Supported Row", heavy(4)),
+                ("Lateral Raise", light(3)),
                 ("Hammer Curl", light(2)),
                 ("Overhead Tricep Extension", light(2)),
             ]),

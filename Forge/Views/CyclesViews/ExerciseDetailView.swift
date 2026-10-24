@@ -8,6 +8,36 @@
 import SwiftUI
 import SwiftData
 
+/// What was lifted the last time this exercise came up, to aim to beat it.
+struct LastSession {
+    let sets: [ExerciseSet]
+    let when: String
+
+    var topWeight: Double? { sets.compactMap(\.weight).max() }
+}
+
+struct LastSessionCard: View {
+    let session: LastSession
+    let unit: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Last time · \(session.when)")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text(session.sets.map { "\(WeightConverter.format($0.weight ?? 0)) × \($0.reps ?? 0)" }.joined(separator: "   "))
+                .font(.body.monospacedDigit())
+            + Text("  \(unit)").font(.footnote).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 // MARK: - Main Exercise Detail View
 // Changes are written straight to the model as they happen, like the set status taps,
 // so there is no separate Save step that could be skipped or half-applied.
@@ -21,6 +51,7 @@ struct ExerciseDetailView: View {
     @State private var weightStart: Double = 45
     @State private var showingAddSetSheet = false
     @State private var editingSet: ExerciseSet? = nil
+    @State private var lastTime: LastSession? = nil
 
     private var exercise: Exercise? {
         cycle.trainingDays
@@ -34,6 +65,9 @@ struct ExerciseDetailView: View {
 
         ScrollView {
             LazyVStack(spacing: 0) {
+                if let lastTime {
+                    LastSessionCard(session: lastTime, unit: cycle.weightUnit)
+                }
                 ExerciseSetsSection(
                     sets: sets,
                     showingAddSetSheet: $showingAddSetSheet,
@@ -46,9 +80,6 @@ struct ExerciseDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle(exercise?.name ?? "")
         .navigationBarTitleDisplayMode(.large)
-        .environment(\.weightUnit, cycle.weightUnit)
-        .environment(\.weightStep, weightStep)
-        .environment(\.weightStart, weightStart)
         .onAppear(perform: loadWeightStep)
         .sheet(isPresented: $showingAddSetSheet) {
             AddSetView { weight, reps in
@@ -67,6 +98,10 @@ struct ExerciseDetailView: View {
                 onCancel: { editingSet = nil }
             )
         }
+        // After the sheets, so the set editor sees these too.
+        .environment(\.weightUnit, cycle.weightUnit)
+        .environment(\.weightStep, weightStep)
+        .environment(\.weightStart, weightStart)
     }
 
     /// A pair of the smallest plates, in the cycle's unit. Read once when the screen opens.
@@ -75,17 +110,43 @@ struct ExerciseDetailView: View {
         let plate = cycle.usesKilograms ? (settings?.smallestPlateKg ?? 1.25) : (settings?.smallestPlateLbs ?? 2.5)
         weightStep = plate * 2
         let bar = cycle.usesKilograms ? (settings?.barbellKg ?? 20) : (settings?.barbellLbs ?? 45)
-        weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastUsedWeight() ?? bar
+        lastTime = findLastSession()
+        weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
     }
 
-    /// The most recent weight logged for this exercise in this cycle.
-    private func lastUsedWeight() -> Double? {
+    /// The most recent earlier time this exercise was logged: earlier days in this cycle,
+    /// then earlier cycles in the same unit, so a new cycle picks up where the last one left off.
+    private func findLastSession() -> LastSession? {
         guard let name = exercise?.name else { return nil }
-        return cycle.trainingDays
+        let logged: (Exercise) -> [ExerciseSet] = { $0.orderedSets.filter { $0.weight != nil && $0.reps != nil } }
+
+        let earlierDays = cycle.trainingDays
+            .filter { $0.dayIndex < dayIndex }
             .sorted { $0.dayIndex > $1.dayIndex }
-            .lazy
-            .compactMap { day in day.day.first { $0.name == name }?.orderedSets.compactMap(\.weight).last }
-            .first
+        for day in earlierDays {
+            if let match = day.day.first(where: { $0.name == name }), !logged(match).isEmpty {
+                return LastSession(sets: logged(match), when: day.completedDate.map(Self.short) ?? day.dayName)
+            }
+        }
+
+        let start = cycle.startDate
+        let descriptor = FetchDescriptor<Cycles>(
+            predicate: #Predicate { $0.startDate < start },
+            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+        )
+        let earlier = (try? context.fetch(descriptor)) ?? []
+        for past in earlier where past.usesKilograms == cycle.usesKilograms {
+            for day in past.trainingDays.sorted(by: { $0.dayIndex > $1.dayIndex }) {
+                if let match = day.day.first(where: { $0.name == name }), !logged(match).isEmpty {
+                    return LastSession(sets: logged(match), when: Self.short(day.completedDate ?? past.startDate))
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func short(_ date: Date) -> String {
+        date.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private func addSet(weight: Double?, reps: Int?) {

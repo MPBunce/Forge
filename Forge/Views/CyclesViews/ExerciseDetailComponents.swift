@@ -472,6 +472,13 @@ private struct SetEditor: View {
             weightText = weight.map { WeightConverter.format($0) } ?? ""
             repsText = reps.map(String.init) ?? ""
         }
+        .onChange(of: focused) { _, field in
+            // Select the number so typing replaces it instead of adding digits in front.
+            guard field != nil else { return }
+            DispatchQueue.main.async {
+                UIApplication.shared.sendAction(#selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
+            }
+        }
     }
 
     private var isValid: Bool {
