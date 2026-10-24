@@ -2,7 +2,7 @@
 //  TodayView.swift
 //  Forge
 //
-//  Home screen for the day: step count, daily bodyweight work and challenges.
+//  Home screen for the day: the next lift and run, step count, daily bodyweight work and challenges.
 //
 
 import SwiftUI
@@ -24,6 +24,7 @@ struct TodayView: View {
                     .foregroundStyle(.secondary)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 0))
+                TrainingSection(day: today)
                 StepsSection(steps: steps)
                 DailyWorkSection(day: today)
                 StretchingSection(day: today)

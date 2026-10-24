@@ -30,5 +30,12 @@ class Cycles {
     var isCompleted: Bool {
         !trainingDays.isEmpty && trainingDays.allSatisfy { $0.completedDate != nil }
     }
+
+    var completedDayCount: Int { trainingDays.filter { $0.completedDate != nil }.count }
+
+    /// The first training day not yet marked done.
+    var nextDay: TrainingDay? {
+        trainingDays.sorted { $0.dayIndex < $1.dayIndex }.first { $0.completedDate == nil }
+    }
     
 }

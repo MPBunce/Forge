@@ -49,16 +49,15 @@ private struct RunPlanRow: View {
     let plan: RunPlan
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(plan.name)
                     .font(.headline)
-                Text(plan.startDate, format: .dateTime.month(.abbreviated).day())
+                Text("Started \(plan.startDate.formatted(.dateTime.month(.abbreviated).day()))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("\(plan.completedCount) of \(plan.sessions.count) runs")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                TrainingProgress(done: plan.completedCount, total: plan.sessions.count, unit: "runs",
+                                 next: plan.nextSession?.title, tint: .orange)
             }
             Spacer()
             if plan.isCompleted {

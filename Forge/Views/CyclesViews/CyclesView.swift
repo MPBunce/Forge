@@ -208,29 +208,53 @@ struct CycleSelectionSheet: View {
 
 struct CycleCell: View {
     let cycle: Cycles
+
     var body: some View {
-        
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(cycle.template)
                     .font(.headline)
-                Text(cycle.startDate, format: .dateTime.month(.abbreviated).day())
+                Text("Started \(cycle.startDate.formatted(.dateTime.month(.abbreviated).day()))")
                     .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(cycle.trainingDays.count == 1 ? "1 day" : "\(cycle.trainingDays.count) days")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
+                if !cycle.trainingDays.isEmpty {
+                    TrainingProgress(done: cycle.completedDayCount, total: cycle.trainingDays.count,
+                                     unit: "days", next: cycle.nextDay?.dayName)
+                }
             }
             Spacer()
-            
             if cycle.isCompleted {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                    .foregroundStyle(.green)
                     .font(.title2)
             }
         }
         .padding(.vertical, 8)
+    }
+}
 
+/// "2 of 4 days done" with a thin bar, and what's next.
+struct TrainingProgress: View {
+    let done: Int
+    let total: Int
+    let unit: String
+    var next: String? = nil
+    var tint: Color = .blue
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(done) of \(total) \(unit) done")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            SwiftUI.ProgressView(value: Double(done), total: Double(max(total, 1)))
+                .tint(done == total ? .green : tint)
+                .frame(maxWidth: 180)
+            if let next, done < total {
+                Text("Next: \(next)")
+                    .font(.caption)
+                    .foregroundStyle(tint)
+            }
+        }
     }
 }
 

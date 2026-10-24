@@ -20,11 +20,11 @@ struct CyclesDetailView: View {
         guard let cycle = selectedCycle, !cycle.trainingDays.isEmpty else { return 0 }
         let sortedDays = cycle.trainingDays.sorted(by: { $0.dayIndex < $1.dayIndex })
         
-        // If selectedDayIndex doesn't exist in the training days, use the first day's index
+        // Until a day is picked, open on the next day to do.
         if cycle.trainingDays.contains(where: { $0.dayIndex == selectedDayIndex }) {
             return selectedDayIndex
         } else {
-            return sortedDays.first?.dayIndex ?? 0
+            return cycle.nextDay?.dayIndex ?? sortedDays.first?.dayIndex ?? 0
         }
     }
 
