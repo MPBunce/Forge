@@ -46,3 +46,30 @@ struct HybridUpperLowerTests {
         #expect(hasTempo)
     }
 }
+
+struct DayPagerTests {
+    private func days(_ names: [String]) -> [TrainingDay] {
+        names.enumerated().map { TrainingDay(dayIndex: $0.offset, dayName: $0.element, day: []) }
+    }
+
+    @Test func groupsByWeekOrSevens() {
+        let weekly = days(["Week 1 - Bench", "Week 1 - Squat", "Week 2 - Bench", "Week 2 - Squat"])
+        let weeklyPages = DayPager.pages(weekly).map(\.count)
+        #expect(weeklyPages == [2, 2])
+        let flat = days((1...9).map { "Day \($0)" })
+        let flatPages = DayPager.pages(flat).map(\.count)
+        #expect(flatPages == [7, 2])
+    }
+
+    @Test func titlesDropRepeatedPrefixes() {
+        let weekly = days(["Week 1 - Bench", "Week 1 - Squat", "Week 2 - Bench"])
+        let t1 = DayPager.title(for: weekly[2], in: weekly)
+        #expect(t1 == "Week 2 · Day 1 · Bench")
+        let hybrid = days(["Mon · Lower A", "Wed · Upper A"])
+        let t2 = DayPager.title(for: hybrid[1], in: hybrid)
+        #expect(t2 == "Wed · Upper A")
+        let ppl = days(["Push", "Pull", "Legs"])
+        let t3 = DayPager.title(for: ppl[1], in: ppl)
+        #expect(t3 == "Day 2 · Pull")
+    }
+}

@@ -45,7 +45,7 @@ struct CyclesDetailView: View {
                     if cycle.trainingDays.isEmpty {
                         emptyStateView
                     } else {
-                        DayStrip(days: sortedTrainingDays(for: cycle), selected: validSelectedDayIndex) {
+                        DayPager(days: sortedTrainingDays(for: cycle), selected: validSelectedDayIndex) {
                             selectedDayIndex = $0
                         }
                         exercisesList(for: cycle)
@@ -95,7 +95,7 @@ struct CyclesDetailView: View {
             if let selectedDay = cycle.trainingDays.first(where: { $0.dayIndex == validSelectedDayIndex }) {
                 Section(header:
                     HStack(alignment: .firstTextBaseline) {
-                        Text(DayStrip.title(for: selectedDay))
+                        Text(DayPager.title(for: selectedDay, in: sortedTrainingDays(for: cycle)))
                             .font(.headline)
                             .foregroundStyle(.primary)
                             .textCase(nil)
@@ -325,17 +325,28 @@ private struct AddExerciseView: View {
     }
 }
 
-/// Training days as a row of numbered buttons, grouped by week when the program has weeks,
-/// with a tick on finished days.
-private struct DayStrip: View {
+/// Every cycle's days, the same way: one week at a time (programs without weeks are one
+/// page, or pages of 7), a row of equal-sized day buttons that always fits, and a header with
+/// the week and how much of the cycle is done.
+struct DayPager: View {
     let days: [TrainingDay]
     let selected: Int
     let onSelect: (Int) -> Void
 
-    private struct Group: Identifiable {
-        let id: Int
-        let title: String?
-        let days: [TrainingDay]
+    @State private var page = 0
+
+    /// Days grouped into pages: by "Week N" in their names, else 7 at a time.
+    static func pages(_ days: [TrainingDay]) -> [[TrainingDay]] {
+        if days.contains(where: { week(of: $0) != nil }) {
+            var result: [[TrainingDay]] = []
+            var current: Int?
+            for day in days {
+                let w = week(of: day) ?? current ?? 0
+                if w == current { result[result.count - 1].append(day) } else { result.append([day]); current = w }
+            }
+            return result
+        }
+        return stride(from: 0, to: days.count, by: 7).map { Array(days[$0..<min($0 + 7, days.count)]) }
     }
 
     /// The week number in names like "Week 2 - Bench" or "Week 1 · Day 3: …".
@@ -344,92 +355,112 @@ private struct DayStrip: View {
         return Int(day.dayName[range].dropFirst(5))
     }
 
-    /// The day's name without the week/day prefix the strip already shows.
-    static func title(for day: TrainingDay) -> String {
-        var name = day.dayName
-        for pattern in [#"^Week \d+\s*[·\-–]\s*Day \d+\s*[:\-–]?\s*"#, #"^Week \d+\s*[·\-–:]\s*"#] {
-            if let r = name.range(of: pattern, options: .regularExpression) { name.removeSubrange(r) }
-        }
-        let number = "Day \(day.dayIndex + 1)"
-        if name.isEmpty || name == number { return number }
-        return "\(number) · \(name)"
+    /// "Mon" from names like "Mon · Lower A".
+    static func weekday(of day: TrainingDay) -> String? {
+        let symbols = Calendar.current.shortWeekdaySymbols
+        let prefix = String(day.dayName.prefix(3))
+        return symbols.contains(prefix) ? prefix : nil
     }
 
-    private var groups: [Group] {
-        let hasWeeks = days.contains { Self.week(of: $0) != nil }
-        guard hasWeeks else { return [Group(id: 0, title: nil, days: days)] }
-        var result: [Group] = []
-        for day in days {
-            let week = Self.week(of: day) ?? 0
-            if let last = result.last, last.id == week {
-                result[result.count - 1] = Group(id: week, title: last.title, days: last.days + [day])
-            } else {
-                result.append(Group(id: week, title: "Week \(week)", days: [day]))
-            }
+    /// The day's name without the week, day number or weekday prefixes the pager already shows.
+    static func shortName(_ day: TrainingDay) -> String {
+        var name = day.dayName
+        for pattern in [#"^Week \d+\s*[·\-–]\s*Day \d+\s*[:\-–]?\s*"#, #"^Week \d+\s*[·\-–:]\s*"#,
+                        #"^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s*·\s*"#] {
+            if let r = name.range(of: pattern, options: .regularExpression) { name.removeSubrange(r) }
         }
-        return result
+        return name == "Day \(day.dayIndex + 1)" ? "" : name
+    }
+
+    /// The title above the exercises: "Week 2 · Day 3 · Bench Press", "Mon · Lower A", "Day 2 · Pull".
+    static func title(for day: TrainingDay, in days: [TrainingDay]) -> String {
+        let pages = pages(days)
+        guard let p = pages.firstIndex(where: { $0.contains { $0.dayIndex == day.dayIndex } }),
+              let d = pages[p].firstIndex(where: { $0.dayIndex == day.dayIndex }) else { return day.dayName }
+        var parts: [String] = []
+        if pages.count > 1 { parts.append("Week \(p + 1)") }
+        parts.append(weekday(of: day) ?? "Day \(d + 1)")
+        let name = shortName(day)
+        if !name.isEmpty { parts.append(name) }
+        return parts.joined(separator: " · ")
+    }
+
+    private var pages: [[TrainingDay]] { Self.pages(days) }
+    private var doneCount: Int { days.filter { $0.completedDate != nil }.count }
+
+    private func pageOf(_ dayIndex: Int) -> Int {
+        pages.firstIndex { $0.contains { $0.dayIndex == dayIndex } } ?? 0
     }
 
     var body: some View {
-        // Centered when every day fits on screen; scrolls (keeping the selected day in view)
-        // when there are too many.
-        ViewThatFits(in: .horizontal) {
-            strip
-                .frame(maxWidth: .infinity)
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    strip
+        let pages = pages
+        let current = pages.isEmpty ? [] : pages[min(page, pages.count - 1)]
+        VStack(spacing: 10) {
+            HStack {
+                if pages.count > 1 {
+                    Button { page -= 1 } label: { Image(systemName: "chevron.left").frame(width: 32, height: 32) }
+                        .disabled(page == 0)
+                        .accessibilityLabel("Previous week")
+                    Text("Week \(page + 1) of \(pages.count)")
+                        .font(.subheadline.weight(.semibold))
+                    Button { page += 1 } label: { Image(systemName: "chevron.right").frame(width: 32, height: 32) }
+                        .disabled(page >= pages.count - 1)
+                        .accessibilityLabel("Next week")
+                } else {
+                    Text("Training days")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(height: 32)
                 }
-                .task(id: selected) { proxy.scrollTo(selected, anchor: .center) }
+                Spacer()
+                Text("\(doneCount) of \(days.count) done")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
             }
+            HStack(spacing: 8) {
+                ForEach(Array(current.enumerated()), id: \.element.dayIndex) { offset, day in
+                    chip(day, number: offset + 1)
+                }
+            }
+            .frame(maxWidth: .infinity)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(Color(.systemBackground))
         .overlay(alignment: .bottom) {
             Rectangle().frame(height: 0.5).foregroundStyle(Color(.separator))
         }
+        .onAppear { page = pageOf(selected) }
+        .onChange(of: selected) { _, new in page = pageOf(new) }
+        .gesture(DragGesture(minimumDistance: 30).onEnded { value in
+            if value.translation.width < -40, page < pages.count - 1 { page += 1 }
+            if value.translation.width > 40, page > 0 { page -= 1 }
+        })
+        .animation(.snappy, value: page)
     }
 
-    private var strip: some View {
-        HStack(alignment: .bottom, spacing: 18) {
-            ForEach(groups) { group in
-                VStack(alignment: .leading, spacing: 6) {
-                    if let title = group.title {
-                        Text(title)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack(spacing: 8) {
-                        ForEach(group.days, id: \.dayIndex) { day in
-                            chip(day).id(day.dayIndex)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-    }
-
-    private func chip(_ day: TrainingDay) -> some View {
+    private func chip(_ day: TrainingDay, number: Int) -> some View {
         let isSelected = day.dayIndex == selected
         let isDone = day.completedDate != nil
+        let weekday = Self.weekday(of: day)
         return Button {
             onSelect(day.dayIndex)
         } label: {
             VStack(spacing: 3) {
-                Text("\(day.dayIndex + 1)")
-                    .font(.headline.monospacedDigit())
+                Text(weekday ?? "\(number)")
+                    .font(weekday == nil ? .headline.monospacedDigit() : .subheadline.weight(.semibold))
                 Image(systemName: isDone ? "checkmark" : "circle.fill")
                     .font(.system(size: isDone ? 10 : 4, weight: .bold))
                     .opacity(isDone ? 1 : 0.35)
             }
             .foregroundStyle(isSelected ? Color.white : (isDone ? Color.green : Color.primary))
-            .frame(width: 46, height: 52)
+            .frame(maxWidth: 64)
+            .frame(height: 52)
             .background(RoundedRectangle(cornerRadius: 12)
                 .fill(isSelected ? Color.accentColor : Color(.secondarySystemBackground)))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(Self.title(for: day))\(isDone ? ", done" : "")")
+        .accessibilityLabel("\(Self.title(for: day, in: days))\(isDone ? ", done" : "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
