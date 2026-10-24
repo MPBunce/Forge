@@ -2,9 +2,9 @@
 //  HybridUpperLowerProgram.swift
 //  Forge
 //
-//  Upper/lower lifting with running: low volume, high intensity, every working set to
-//  failure. Lifting Monday, Wednesday, Friday and Sunday, with an easy run, a tempo run
-//  and a long run between.
+//  Upper/lower lifting for runners: low volume, high intensity, every working set to
+//  failure. Lifting Monday, Wednesday, Friday and Sunday; the runs between are the
+//  Hybrid Runs plan in Training › Running.
 //
 
 import Foundation
@@ -40,10 +40,7 @@ final class HybridUpperLowerProgram: ProgramProtocol {
                 ("Hip Thrust", heavy(2)),
                 ("Hip Abduction", light(2)),
             ]),
-            Self.day(1, "Tue · Easy Run", [
-                ("Easy run: 30–45 min, conversational pace", SetScheme.session()),
-            ]),
-            Self.day(2, "Wed · Upper A", [
+            Self.day(1, "Wed · Upper A", [
                 ("Incline Dumbbell Press", heavy(2)),
                 ("Machine Chest Press", heavy(2)),
                 ("Lat Pulldown", heavy(2)),
@@ -52,10 +49,7 @@ final class HybridUpperLowerProgram: ProgramProtocol {
                 ("Incline Dumbbell Curl", light(2)),
                 ("Tricep Pushdown", light(2)),
             ]),
-            Self.day(3, "Thu · Tempo Run", [
-                ("Tempo run: 10 min easy, 15–20 min comfortably hard, 10 min easy", SetScheme.session()),
-            ]),
-            Self.day(4, "Fri · Lower B", [
+            Self.day(2, "Fri · Lower B", [
                 ("Squat", heavy(2)),
                 ("Hack Squat", heavy(2)),
                 ("Leg Extension", light(2)),
@@ -64,10 +58,7 @@ final class HybridUpperLowerProgram: ProgramProtocol {
                 ("Bulgarian Split Squat", heavy(2)),
                 ("Cable Glute Kickback", light(2)),
             ]),
-            Self.day(5, "Sat · Long Run", [
-                ("Long run: 60–90 min, easy pace", SetScheme.session()),
-            ]),
-            Self.day(6, "Sun · Upper B", [
+            Self.day(3, "Sun · Upper B", [
                 ("Bench Press", heavy(2)),
                 ("Cable Fly", light(2)),
                 ("Pull-up", heavy(2)),

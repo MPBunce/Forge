@@ -22,15 +22,27 @@ struct GreyskullTests {
 }
 
 struct HybridUpperLowerTests {
-    @Test func weekLayoutAndVolume() {
+    @Test func liftingDaysOnly() {
         let days = HybridUpperLowerProgram().trainingDays
-        #expect(days.map(\.dayName) == ["Mon · Lower A", "Tue · Easy Run", "Wed · Upper A", "Thu · Tempo Run",
-                                        "Fri · Lower B", "Sat · Long Run", "Sun · Upper B"])
-        let lowerA = days[0].day.reduce(0) { $0 + $1.sets.count }
-        let upperA = days[2].day.reduce(0) { $0 + $1.sets.count }
-        #expect(lowerA == 14)  // 2 squat + 4 quad + 4 ham + 4 glute
-        #expect(upperA == 15)  // 4 chest + 4 back + 3 shoulder + 4 arms
-        // Every lifting set is taken to failure.
-        #expect(days[0].day.allSatisfy { $0.sets.allSatisfy(\.isAmrap) })
+        let names = days.map { $0.dayName }
+        let indexes = days.map { $0.dayIndex }
+        let lowerSets = days[0].day.reduce(0) { $0 + $1.sets.count }
+        let upperSets = days[1].day.reduce(0) { $0 + $1.sets.count }
+        let allToFailure = days.allSatisfy { day in day.day.allSatisfy { ex in ex.sets.allSatisfy { $0.isAmrap } } }
+        #expect(names == ["Mon · Lower A", "Wed · Upper A", "Fri · Lower B", "Sun · Upper B"])
+        #expect(indexes == [0, 1, 2, 3])
+        #expect(lowerSets == 14)  // 2 squat + 4 quad + 4 ham + 4 glute
+        #expect(upperSets == 15)  // 4 chest + 4 back + 3 shoulder + 4 arms
+        #expect(allToFailure)
+    }
+
+    @Test func hybridRunsPlan() {
+        let sessions = RunPlanTemplate.hybridRuns.makeSessions()
+        let count = sessions.count
+        let allTimed = sessions.allSatisfy { $0.isTimed }
+        let hasTempo = sessions.contains { session in session.segments.contains { $0.kind == .tempo } }
+        #expect(count == 24)
+        #expect(allTimed)
+        #expect(hasTempo)
     }
 }

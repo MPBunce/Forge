@@ -220,8 +220,8 @@ extension Template {
             Template(
                 id: "hybrid_upper_lower",
                 name: "Hybrid Upper Lower",
-                description: "Low-volume lifting to failure, plus three runs a week",
-                duration: "7 days",
+                description: "Low-volume lifting to failure, for runners",
+                duration: "4 days",
                 programType: .hybridUpperLower
             )
         ]

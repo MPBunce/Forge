@@ -11,7 +11,7 @@ import SwiftData
 
 struct RunSegment: Codable, Hashable {
     enum Kind: String, Codable {
-        case warmUp, run, walk, coolDown
+        case warmUp, run, walk, coolDown, tempo
 
         var title: String {
             switch self {
@@ -19,10 +19,11 @@ struct RunSegment: Codable, Hashable {
             case .run: return "Run"
             case .walk: return "Walk"
             case .coolDown: return "Cool-down walk"
+            case .tempo: return "Tempo run"
             }
         }
 
-        var isRunning: Bool { self == .run }
+        var isRunning: Bool { self == .run || self == .tempo }
     }
 
     var kind: Kind
@@ -33,6 +34,7 @@ struct RunSegment: Codable, Hashable {
     static func run(_ seconds: Int) -> RunSegment { RunSegment(kind: .run, seconds: seconds) }
     static func walk(_ seconds: Int) -> RunSegment { RunSegment(kind: .walk, seconds: seconds) }
     static func runKm(_ km: Double) -> RunSegment { RunSegment(kind: .run, kilometres: km) }
+    static func tempo(_ seconds: Int) -> RunSegment { RunSegment(kind: .tempo, seconds: seconds) }
     static let warmUp = RunSegment(kind: .warmUp, seconds: 300)
     static let coolDown = RunSegment(kind: .coolDown, seconds: 300)
 
@@ -92,7 +94,7 @@ struct RunSession: Codable, Hashable, Identifiable {
     /// One-line description, e.g. "Run 60 sec / walk 90 sec × 8" or "Run 10 km".
     var summary: String {
         if !isTimed { return "Run \(RunSegment.formatKm(runningKilometres))" }
-        let core = segments.filter { $0.kind == .run || $0.kind == .walk }
+        let core = segments.filter { $0.kind == .run || $0.kind == .walk || $0.kind == .tempo }
         // Spot a repeating run/walk pair.
         if core.count >= 4, core.count % 2 == 0 {
             let pair = Array(core.prefix(2))
@@ -164,7 +166,7 @@ struct RunPlanTemplate: Identifiable {
         RunPlan(name: name, sessions: makeSessions())
     }
 
-    static let all: [RunPlanTemplate] = [couchTo5K, fiveToTenK, halfMarathon]
+    static let all: [RunPlanTemplate] = [couchTo5K, fiveToTenK, halfMarathon, hybridRuns]
 
     /// The NHS Couch to 5K: 9 weeks, 3 runs a week, each with a 5 minute warm-up and cool-down walk.
     static let couchTo5K = RunPlanTemplate(
@@ -237,6 +239,30 @@ struct RunPlanTemplate: Identifiable {
                 RunSession(week: week, number: 2, title: "Week \(week) · Easy Run", segments: [.runKm(isRaceWeek ? 3 : easy[index])]),
                 RunSession(week: week, number: 3, title: isRaceWeek ? "Race Day · Half Marathon" : "Week \(week) · Long Run",
                            segments: [.runKm(long[index])])
+            ]
+        }
+    }
+
+    /// The running half of Hybrid Upper Lower: an easy run Tuesday, a tempo run Thursday and a
+    /// long run Saturday, building over 7 weeks with an easier 8th week to recover.
+    static let hybridRuns = RunPlanTemplate(
+        id: "hybrid-runs",
+        name: "Hybrid Runs",
+        summary: "Easy, tempo and long runs alongside lifting",
+        duration: "8 weeks · 3 runs a week"
+    ) {
+        let easy = [35, 35, 40, 40, 40, 45, 45, 35]
+        let tempo = [15, 15, 18, 18, 20, 20, 22, 15]
+        let long = [60, 65, 70, 75, 80, 85, 90, 60]
+        return (0..<easy.count).flatMap { index -> [RunSession] in
+            let week = index + 1
+            return [
+                RunSession(week: week, number: 1, title: "Week \(week) · Tue · Easy Run",
+                           segments: [.run(easy[index] * 60)]),
+                RunSession(week: week, number: 2, title: "Week \(week) · Thu · Tempo Run",
+                           segments: [.run(10 * 60), .tempo(tempo[index] * 60), .run(10 * 60)]),
+                RunSession(week: week, number: 3, title: "Week \(week) · Sat · Long Run",
+                           segments: [.run(long[index] * 60)]),
             ]
         }
     }

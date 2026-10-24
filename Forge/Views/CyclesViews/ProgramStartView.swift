@@ -16,6 +16,8 @@ struct ProgramStartView: View {
 
     @State private var swaps: [String: String] = [:]
     @State private var showingPlus = false
+    @State private var alsoStartRuns = true
+    @Environment(\.modelContext) private var context
     private var plus = ForgePlus.shared
 
     init(template: Template, settings: UserSettings, onStart: @escaping ([String: String]) -> Void) {
@@ -65,6 +67,14 @@ struct ProgramStartView: View {
                 }
             }
 
+            if template.programType == .hybridUpperLower {
+                Section {
+                    Toggle("Also start Hybrid Runs", isOn: $alsoStartRuns)
+                } footer: {
+                    Text("Adds the matching running plan to Training › Running: an easy run Tuesday, a tempo run Thursday and a long run Saturday.")
+                }
+            }
+
             if !plus.isActive {
                 Section {
                     Button {
@@ -85,6 +95,9 @@ struct ProgramStartView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             Button {
+                if template.programType == .hybridUpperLower && alsoStartRuns {
+                    context.insert(RunPlanTemplate.hybridRuns.createPlan())
+                }
                 onStart(swaps)
             } label: {
                 Text("Start Cycle")
