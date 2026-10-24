@@ -90,6 +90,10 @@ enum DemoData {
         completedCycle(scale: 1.0, startDaysAgo: 30, daysDone: 13)
 
         // Greyskull LP, just started.
+        if CommandLine.arguments.contains("-ForgeDemoHybrid") {
+            let hybrid = Template.loadTemplates().first { $0.programType == .hybridUpperLower }!
+            context.insert(hybrid.createCycle(with: UserSettings(from: settings), startDate: Date()))
+        }
         let greyskull = Template.loadTemplates().first { $0.programType == .greySkull }!
         context.insert(greyskull.createCycle(with: UserSettings(from: settings), startDate: daysAgo(1)))
 

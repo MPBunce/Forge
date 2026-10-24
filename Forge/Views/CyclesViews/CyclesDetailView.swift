@@ -114,14 +114,20 @@ struct CyclesDetailView: View {
                     }
                 ) {
                     ForEach(sortedExercises(for: selectedDay), id: \.exerciseIndex) { exercise in
-                        NavigationLink(destination: ExerciseDetailView(
-                            cycle: cycle,
-                            dayIndex: selectedDay.dayIndex,
-                            exerciseIndex: exercise.exerciseIndex
-                        )) {
-                            ExerciseRowView(exercise: exercise)
+                        if exercise.isCheckOff {
+                            // A run or other session with nothing to log: tick it off right here.
+                            CheckOffRow(exercise: exercise) { toggleCheckOff(exercise, on: selectedDay) }
+                                .deleteDisabled(!plus.isActive)
+                        } else {
+                            NavigationLink(destination: ExerciseDetailView(
+                                cycle: cycle,
+                                dayIndex: selectedDay.dayIndex,
+                                exerciseIndex: exercise.exerciseIndex
+                            )) {
+                                ExerciseRowView(exercise: exercise)
+                            }
+                            .deleteDisabled(!plus.isActive)
                         }
-                        .deleteDisabled(!plus.isActive)
                     }
                     .onDelete { offsets in
                         let exercises = sortedExercises(for: selectedDay)
@@ -242,6 +248,18 @@ struct CyclesDetailView: View {
         case let (r?, nil): return r
         case let (nil, w?): return w
         default: return "Not set"
+        }
+    }
+
+    /// Ticks a session off, and completes the day when everything on it is a finished session.
+    private func toggleCheckOff(_ exercise: Exercise, on day: TrainingDay) {
+        guard let set = exercise.orderedSets.first else { return }
+        withAnimation {
+            set.completionStatus = set.isCompleted ? .notStarted : .completedSuccessfully
+            let allSessions = day.day.allSatisfy(\.isCheckOff)
+            if allSessions {
+                day.completedDate = day.day.allSatisfy { $0.sets.allSatisfy(\.isCompleted) } ? (day.completedDate ?? Date()) : nil
+            }
         }
     }
 
@@ -403,5 +421,49 @@ private struct DayStrip: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(Self.title(for: day))\(isDone ? ", done" : "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+extension Exercise {
+    /// A single item with nothing to log (a run, a session): ticked off rather than opened.
+    var isCheckOff: Bool {
+        sets.count == 1 && sets[0].reps == nil && sets[0].weight == nil && !sets[0].isAmrap
+    }
+}
+
+/// A run or session on a training day: its description and a big tick.
+private struct CheckOffRow: View {
+    let exercise: Exercise
+    let onToggle: () -> Void
+
+    var body: some View {
+        let done = exercise.sets.first?.isCompleted ?? false
+        Button(action: onToggle) {
+            HStack(spacing: 14) {
+                Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                    .font(.title)
+                    .foregroundStyle(done ? Color.green : Color.secondary)
+                    .contentTransition(.symbolEffect(.replace))
+                VStack(alignment: .leading, spacing: 3) {
+                    let parts = exercise.name.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                    Text(parts.first ?? exercise.name)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    if parts.count > 1 {
+                        Text(parts[1].prefix(1).uppercased() + parts[1].dropFirst())
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(done ? "Done" : "Tap to tick off. Log distance in Running if you like.")
+                        .font(.caption)
+                        .foregroundStyle(done ? Color.green : Color.secondary)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(done ? "Done" : "Not done")
     }
 }

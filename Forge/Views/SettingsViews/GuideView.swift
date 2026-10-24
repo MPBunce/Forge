@@ -22,9 +22,10 @@ struct GuideTopic: Identifiable {
         ]),
         GuideTopic(id: "strength", title: "Strength Training", icon: "figure.strengthtraining.traditional", sections: [
             ("Starting a cycle", "Go to Training › Strength and tap +. Pick a built-in program or one of your own templates. 5/3/1 and nSuns calculate working weights from your training maxes; other programs leave weights blank for you to fill in."),
-            ("Logging sets", "Open a training day, then an exercise. Tap a set once to mark it done, again to mark it failed, and a third time to reset. AMRAP sets (as many reps as possible) open a sheet where you enter the reps you hit. Changes save straight away."),
+            ("Choosing a day", "The numbered buttons at the top are your training days, grouped by week, with a tick on days you've finished. A cycle opens on the next day to do."),
+            ("Logging sets", "Open an exercise. Tap a set to mark it done, again to mark it failed, and a third time to reset. Tap a set's weight and reps to change them: use − and + (weight moves by a pair of your smallest plates) or tap a number to type it. AMRAP sets (as many reps as possible) ask for the reps you hit. Changes save straight away."),
             ("Finishing a day", "Mark the day complete from the day screen. Completed days count as workouts on the Activity grid and feed the strength charts."),
-            ("Programs", "Each built-in program explains how often you train and how it progresses. Tap one to see its lifts before you start."),
+            ("Programs", "Each built-in program explains how often you train and how it progresses. Tap one to see its lifts before you start. Hybrid Upper Lower mixes four low-volume lifting days, every set to failure, with an easy run, a tempo run and a long run each week; tick the runs off on their days."),
             ("Swapping and adding exercises", "Forge Plus: before starting a program, tap any lift to swap it for a variation (Squat for Front Squat, say) or type your own. In a running cycle, tap Add Exercise under a day's list, and swipe to remove one. Sets, reps and weights stay as the program sets them."),
             ("Custom templates", "Forge Plus: tap Create Template when starting a cycle. Add named days, then exercises with sets × reps and an optional AMRAP last set. Swipe a template to edit or delete it.")
         ]),
