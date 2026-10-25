@@ -187,9 +187,16 @@ struct SingleRunsSection: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(RunSegment.formatKm(run.kilometres))
                             .font(.headline)
-                        Text(run.date.formatted(.dateTime.month(.abbreviated).day().year()))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            Text(run.date.formatted(.dateTime.month(.abbreviated).day().year()))
+                            if run.healthID != nil {
+                                Image(systemName: "heart.fill")
+                                    .foregroundStyle(.pink)
+                                    .accessibilityLabel("From Apple Health")
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                     Spacer()
                     if let seconds = run.seconds {
@@ -212,11 +219,12 @@ struct SingleRunsSection: View {
         } header: {
             Text("Runs")
         } footer: {
-            Text("Log any run outside a plan. It counts on the Ran grid and towards your distance badges.")
+            Text("Log any run outside a plan. It counts on the Ran grid and towards your distance badges. Runs from Apple Health (marked with a heart) come in automatically when it's turned on in Settings.")
         }
         .sheet(isPresented: $showingLog) {
             LogRunSheet()
         }
+        .task { await HealthRunImporter.importNewRuns(into: context) }
     }
 }
 

@@ -11,13 +11,14 @@ enum SetCompletionStatus: String, Codable, CaseIterable {
 
 @Model
 class ExerciseSet {
-    var setIndex: Int
+    var setIndex: Int = 0
     var weight: Double?
     var reps: Int?
     var isEditable: Bool = true
     var isAmrap: Bool = false
     var amrapTargetReps: Int?
-    var completionStatus: SetCompletionStatus
+    var completionStatus: SetCompletionStatus = SetCompletionStatus.notStarted
+    var exercise: Exercise?
     
     init(setIndex: Int, weight: Double? = nil, reps: Int? = nil, isEditable: Bool = true, isAmrap: Bool = false, amrapTargetReps: Int? = nil, completionStatus: SetCompletionStatus = .notStarted) {
         self.setIndex = setIndex
@@ -74,16 +75,22 @@ class ExerciseSet {
 
 @Model
 class Exercise {
-    var exerciseIndex: Int
-    var name: String
+    var exerciseIndex: Int = 0
+    var name: String = ""
     var canAlterSets: Bool = true  // Combined add/delete permission
-    var sets: [ExerciseSet]
+    @Relationship(deleteRule: .cascade, originalName: "sets", inverse: \ExerciseSet.exercise)
+    var storedSets: [ExerciseSet]? = []
+    var sets: [ExerciseSet] {
+        get { storedSets ?? [] }
+        set { storedSets = newValue }
+    }
+    var trainingDay: TrainingDay?
     
     init(exerciseIndex: Int, name: String, canAlterSets: Bool = true, sets: [ExerciseSet]) {
         self.exerciseIndex = exerciseIndex
         self.name = name
         self.canAlterSets = canAlterSets
-        self.sets = sets
+        self.storedSets = sets
     }
     
     func copy() -> Exercise {
@@ -169,16 +176,22 @@ class Exercise {
 
 @Model
 class TrainingDay {
-    var dayIndex: Int
-    var dayName: String
-    var day: [Exercise]
+    var dayIndex: Int = 0
+    var dayName: String = ""
+    @Relationship(deleteRule: .cascade, originalName: "day", inverse: \Exercise.trainingDay)
+    var storedExercises: [Exercise]? = []
+    var day: [Exercise] {
+        get { storedExercises ?? [] }
+        set { storedExercises = newValue }
+    }
+    var cycle: Cycles?
     var completedDate: Date?
     var canAddAccessory: Bool = true
     
     init(dayIndex: Int, dayName: String, day: [Exercise], completedDate: Date? = nil, canAddAccessory: Bool = false) {
         self.dayIndex = dayIndex
         self.dayName = dayName
-        self.day = day
+        self.storedExercises = day
         self.completedDate = completedDate
         self.canAddAccessory = canAddAccessory
     }

@@ -508,8 +508,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ForgeInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Forge;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Forge reads your step count so it can track your daily step goal.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Forge only reads your step count and never writes data to Apple Health.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Forge reads your step count to track your daily step goal, and your running workouts if you choose to import them.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Forge only reads from Apple Health and never writes data to it.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -540,8 +540,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ForgeInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Forge;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Forge reads your step count so it can track your daily step goal.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Forge only reads your step count and never writes data to Apple Health.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Forge reads your step count to track your daily step goal, and your running workouts if you choose to import them.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Forge only reads from Apple Health and never writes data to it.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

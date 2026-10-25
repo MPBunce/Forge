@@ -76,6 +76,8 @@ class LoggedRun {
     var kilometres: Double = 0
     /// Optional finish time.
     var seconds: Int? = nil
+    /// The Apple Health workout this run was imported from, if any.
+    var healthID: String? = nil
 
     init(date: Date, kilometres: Double, seconds: Int?) {
         self.date = date

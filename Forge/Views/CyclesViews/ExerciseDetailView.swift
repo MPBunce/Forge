@@ -49,6 +49,9 @@ struct ExerciseDetailView: View {
     @Environment(\.modelContext) private var context
     @State private var weightStep: Double = 5
     @State private var weightStart: Double = 45
+    @State private var restSeconds = RestTimer.defaultSeconds
+    @State private var bar: Double = 45
+    @State private var smallestPlate: Double = 2.5
     @State private var showingAddSetSheet = false
     @State private var editingSet: ExerciseSet? = nil
     @State private var lastTime: LastSession? = nil
@@ -102,6 +105,10 @@ struct ExerciseDetailView: View {
         .environment(\.weightUnit, cycle.weightUnit)
         .environment(\.weightStep, weightStep)
         .environment(\.weightStart, weightStart)
+        .environment(\.restSeconds, restSeconds)
+        .environment(\.barWeight, bar)
+        .environment(\.smallestPlate, smallestPlate)
+        .safeAreaInset(edge: .bottom) { RestTimerBar() }
     }
 
     /// A pair of the smallest plates, in the cycle's unit. Read once when the screen opens.
@@ -109,7 +116,11 @@ struct ExerciseDetailView: View {
         let settings = (try? context.fetch(FetchDescriptor<Settings>()))?.first
         let plate = cycle.usesKilograms ? (settings?.smallestPlateKg ?? 1.25) : (settings?.smallestPlateLbs ?? 2.5)
         weightStep = plate * 2
+        smallestPlate = plate
+        RestTimer.migrateDefault(settings)
+        restSeconds = settings?.defaultRestTime ?? RestTimer.defaultSeconds
         let bar = cycle.usesKilograms ? (settings?.barbellKg ?? 20) : (settings?.barbellLbs ?? 45)
+        self.bar = bar
         lastTime = findLastSession()
         weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
     }
@@ -187,6 +198,7 @@ struct ExerciseDetailView: View {
             } else {
                 set.completionStatus = .completedSuccessfully
             }
+            RestTimer.shared.startIfEnabled(seconds: restSeconds)
         } else {
             set.completionStatus = .notStarted
         }

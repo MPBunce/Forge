@@ -5,6 +5,10 @@ struct GoalsView: View {
     @Environment(\.modelContext) var context
     @Query(sort: \Goal.order) var goals: [Goal]
     @Query private var cycles: [Cycles]
+    @State private var editing: Goal?
+    @State private var adding = false
+    @State private var showingPlus = false
+    private var plus = ForgePlus.shared
     
     var body: some View {
         ScrollView {
@@ -25,7 +29,16 @@ struct GoalsView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(goals) { goal in
                         goalRow(for: goal)
+                            .contextMenu {
+                                if plus.isActive {
+                                    Button("Edit", systemImage: "pencil") { editing = goal }
+                                    Button("Delete", systemImage: "trash", role: .destructive) {
+                                        context.delete(goal)
+                                    }
+                                }
+                            }
                     }
+                    addGoalButton
                 }
 
                 RunningGoalsSection()
@@ -34,7 +47,46 @@ struct GoalsView: View {
         }
         .onAppear {
             initializeDefaultGoalsIfNeeded()
+            removeDuplicateGoals()
             checkAutoGoals()
+        }
+        .sheet(isPresented: $adding) {
+            GoalEditor(goal: nil, nextOrder: (goals.map(\.order).max() ?? -1) + 1)
+        }
+        .sheet(item: $editing) { goal in
+            GoalEditor(goal: goal, nextOrder: goal.order)
+        }
+        .sheet(isPresented: $showingPlus) {
+            NavigationStack { ForgePlusView() }
+        }
+    }
+
+    /// Forge Plus: add your own goal. Long-press a goal to edit or delete it.
+    private var addGoalButton: some View {
+        Button {
+            if plus.isActive { adding = true } else { showingPlus = true }
+        } label: {
+            HStack {
+                Label("Add Goal", systemImage: plus.isActive ? "plus" : "lock")
+                Spacer()
+                if !plus.isActive { PlusBadge() }
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+        }
+    }
+
+    /// Two devices can each create the default goals before iCloud syncs them together.
+    /// Keep one of each, preferring the one that's ticked off.
+    private func removeDuplicateGoals() {
+        var kept: [String: Goal] = [:]
+        for goal in goals {
+            guard let other = kept[goal.goal] else { kept[goal.goal] = goal; continue }
+            let keep = goal.isCompleted && !other.isCompleted ? goal : other
+            context.delete(keep === goal ? other : goal)
+            kept[goal.goal] = keep
         }
     }
     

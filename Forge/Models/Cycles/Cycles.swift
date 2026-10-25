@@ -9,10 +9,17 @@ import SwiftData
 
 @Model
 class Cycles {
-    @Attribute(.unique) var id: UUID
-    var startDate: Date
-    var template: String
-    var trainingDays: [TrainingDay]
+    // iCloud sync needs every stored value to have a default, no unique constraints,
+    // and optional relationships with inverses. The plain names wrap the stored ones.
+    var id: UUID = UUID()
+    var startDate: Date = Date()
+    var template: String = ""
+    @Relationship(deleteRule: .cascade, originalName: "trainingDays", inverse: \TrainingDay.cycle)
+    var storedDays: [TrainingDay]? = []
+    var trainingDays: [TrainingDay] {
+        get { storedDays ?? [] }
+        set { storedDays = newValue }
+    }
     /// Unit the cycle's weights were written in. Fixed at creation so switching the
     /// app's unit later doesn't reinterpret existing numbers.
     var usesKilograms: Bool = false
@@ -21,7 +28,7 @@ class Cycles {
         self.id = UUID()
         self.startDate = startDate
         self.template = template
-        self.trainingDays = trainingDays
+        self.storedDays = trainingDays
         self.usesKilograms = usesKilograms
     }
     

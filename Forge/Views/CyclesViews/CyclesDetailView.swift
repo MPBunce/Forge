@@ -3,6 +3,7 @@ import SwiftData
 
 struct CyclesDetailView: View {
     @Environment(\.modelContext) var context
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \Cycles.startDate, order: .reverse)
     private var cycles: [Cycles]
 
@@ -59,6 +60,7 @@ struct CyclesDetailView: View {
         .navigationTitle(cycle?.template ?? "Cycle Detail")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showingPlus) { ForgePlusView() }
+        .safeAreaInset(edge: .bottom) { RestTimerBar() }
         .onAppear {
             // Open on the next day to do.
             if selectedDayIndex < 0, let cycle {
@@ -92,6 +94,11 @@ struct CyclesDetailView: View {
 
     private func exercisesList(for cycle: Cycles) -> some View {
         List {
+            if cycle.isCompleted, let template = Template.named(cycle.template) {
+                Section {
+                    CycleFinishedBanner(template: template) { dismiss() }
+                }
+            }
             if let selectedDay = cycle.trainingDays.first(where: { $0.dayIndex == validSelectedDayIndex }) {
                 Section(header:
                     HStack(alignment: .firstTextBaseline) {

@@ -16,9 +16,7 @@ struct RunPlansList: View {
 
     var body: some View {
         List {
-            SingleRunsSection()
-            RacesSection()
-
+            // Plans first: the next run to do matters more than the log of past ones.
             Section("Plans") {
                 if plans.isEmpty {
                     Button {
@@ -38,6 +36,9 @@ struct RunPlansList: View {
                     for index in offsets { context.delete(plans[index]) }
                 }
             }
+
+            SingleRunsSection()
+            RacesSection()
         }
         .sheet(isPresented: $showingAddPlan) {
             RunPlanSelectionSheet()

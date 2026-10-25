@@ -38,6 +38,11 @@ enum PreferenceKeys {
     static let stretchRoutines = "stretchRoutines"
     /// Set once the launch quote has been shown, so it only appears on first launch.
     static let hasSeenSplash = "hasSeenSplash"
+    /// Import running workouts from Apple Health.
+    static let importHealthRuns = "importHealthRuns"
+    /// Forge Plus: start a rest timer after each set.
+    static let restTimerEnabled = "restTimerEnabled"
+    static let showPlates = "showPlates"
 }
 
 /// A lift that can be charted, plus the exercise names in the app's templates that count as it.

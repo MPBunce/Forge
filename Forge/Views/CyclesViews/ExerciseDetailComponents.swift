@@ -226,6 +226,7 @@ struct StatCard: View {
 
 // MARK: - Modern Set Row Component
 struct ModernSetRowView: View {
+    @Environment(\.restSeconds) private var restSeconds
     let set: ExerciseSet
     let number: Int
     let canDelete: Bool
@@ -288,6 +289,9 @@ struct ModernSetRowView: View {
                 onEdit()
             } else {
                 withAnimation(.spring(response: 0.3)) { set.cycleStatus() }
+                if set.completionStatus == .completedSuccessfully {
+                    RestTimer.shared.startIfEnabled(seconds: restSeconds)
+                }
             }
         }
     }
@@ -401,6 +405,10 @@ private struct SetEditor: View {
     @Environment(\.weightUnit) private var unit
     @Environment(\.weightStep) private var step
     @Environment(\.weightStart) private var start
+    @Environment(\.barWeight) private var bar
+    @Environment(\.smallestPlate) private var smallestPlate
+    @AppStorage(PreferenceKeys.showPlates) private var showPlates = true
+    private var plus = ForgePlus.shared
 
     let title: String
     let confirmTitle: String
@@ -430,6 +438,9 @@ private struct SetEditor: View {
                 stepperRow(label: "Weight (\(unit))", text: $weightText, field: .weight, editable: weightEditable,
                            keyboard: .decimalPad,
                            minus: { adjustWeight(-step) }, plus: { adjustWeight(step) })
+                if plus.isActive, weightEditable {
+                    platesRow
+                }
                 stepperRow(label: repsLabel, text: $repsText, field: .reps, editable: repsEditable,
                            keyboard: .numberPad,
                            minus: { adjustReps(-1) }, plus: { adjustReps(1) })
@@ -478,6 +489,26 @@ private struct SetEditor: View {
             DispatchQueue.main.async {
                 UIApplication.shared.sendAction(#selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
             }
+        }
+    }
+
+    /// Forge Plus: what to load on each side of the bar. Tap to hide or show it.
+    @ViewBuilder
+    private var platesRow: some View {
+        if let weight = Double(weightText),
+           let result = PlateCalculator.plates(for: weight, bar: bar, smallest: smallestPlate, kilograms: unit == "kg") {
+            Button {
+                showPlates.toggle()
+            } label: {
+                Label(showPlates
+                      ? "Per side: \(PlateCalculator.describe(result.plates))\(result.remainder > 0 ? " (+\(WeightConverter.format(result.remainder)) short)" : "")"
+                      : "Show plates",
+                      systemImage: "circle.grid.cross")
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Shows or hides the plates for each side of the bar")
         }
     }
 

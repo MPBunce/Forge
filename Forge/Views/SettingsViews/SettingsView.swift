@@ -12,6 +12,10 @@ struct SettingsView: View {
     @Environment(\.modelContext) var context
     @Query var settings: [Settings]
     @AppStorage(PreferenceKeys.appearance) private var appearance = AppearanceMode.system.rawValue
+    @AppStorage(PreferenceKeys.importHealthRuns) private var importHealthRuns = false
+    @AppStorage(PreferenceKeys.restTimerEnabled) private var restTimerEnabled = true
+    private var plus = ForgePlus.shared
+    @State private var importMessage: String?
     
     private var userSettings: Settings {
         if let existingSettings = settings.first {
@@ -108,7 +112,60 @@ struct SettingsView: View {
                 } footer: {
                     Text("Steps are read from Apple Health and shown on the Today tab.")
                 }
+
+                Section {
+                    Toggle(isOn: $importHealthRuns) {
+                        Label("Import Runs from Health", systemImage: "heart.text.square")
+                    }
+                    .onChange(of: importHealthRuns) { _, on in
+                        guard on else { importMessage = nil; return }
+                        Task {
+                            let added = await HealthRunImporter.importNewRuns(into: context)
+                            importMessage = added == 0 ? "No new runs found in the last \(HealthRunImporter.firstImportDays) days."
+                                : "Added \(added) run\(added == 1 ? "" : "s") from Apple Health."
+                        }
+                    }
+                } header: {
+                    Text("Running")
+                } footer: {
+                    Text(importMessage ?? "Running workouts from Apple Health, like Apple Watch or Strava runs, are added to Training › Running and count on the Ran grid.")
+                }
                 
+                // Rest Timer (Forge Plus)
+                Section {
+                    if plus.isActive {
+                        Toggle(isOn: $restTimerEnabled) {
+                            Label("Rest Timer", systemImage: "timer")
+                        }
+                        if restTimerEnabled {
+                            Picker(selection: Binding(
+                                get: { userSettings.defaultRestTime },
+                                set: { newValue in updateSetting { userSettings.defaultRestTime = newValue } }
+                            )) {
+                                ForEach(RestTimer.durations, id: \.self) { seconds in
+                                    Text(RaceTime.format(seconds)).tag(seconds)
+                                }
+                            } label: {
+                                Label("Rest Length", systemImage: "hourglass")
+                            }
+                        }
+                    } else {
+                        NavigationLink {
+                            ForgePlusView()
+                        } label: {
+                            HStack {
+                                Label("Rest Timer", systemImage: "lock")
+                                Spacer()
+                                PlusBadge()
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Workouts")
+                } footer: {
+                    Text("Starts a countdown when you tick off a set, and notifies you when rest is over. Tap the weight while logging a set to see the plates for each side.")
+                }
+
                 // Equipment Section
                 Section {
                     Picker(selection: Binding(
@@ -203,6 +260,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .onAppear { RestTimer.migrateDefault(settings.first) }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 initializeDefaultSettingsIfNeeded()

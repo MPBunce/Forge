@@ -9,9 +9,9 @@ import SwiftData
 
 @Model
 class Goal {
-    var goal: String
+    var goal: String = ""
     var completionDate: Date?
-    var isCompleted: Bool
+    var isCompleted: Bool = false
     /// Display position; SwiftData doesn't keep insertion order.
     var order: Int = 0
     /// Auto-tracked goals: the lift name (or `Goal.totalLift`) and target weight in lbs.

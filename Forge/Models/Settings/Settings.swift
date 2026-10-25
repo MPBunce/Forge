@@ -15,6 +15,11 @@ extension EnvironmentValues {
     @Entry var weightStep: Double = 5
     /// Where + starts from when a set has no weight yet (the last weight used, or the bar).
     @Entry var weightStart: Double = 45
+    /// Forge Plus: rest between sets, in seconds.
+    @Entry var restSeconds: Int = 120
+    /// The empty bar and smallest plate, in the weights' unit, for the plate calculator.
+    @Entry var barWeight: Double = 45
+    @Entry var smallestPlate: Double = 2.5
 }
 
 // MARK: - Plate rounding
@@ -70,13 +75,13 @@ struct WeightConverter {
 
 @Model
 class Settings {
-    var usesKilograms: Bool
-    var enableNotifications: Bool
-    var enableRestTimerSound: Bool
-    var defaultRestTime: Int // in seconds
-    var enableProgressPhotos: Bool
-    var enableCloudSync: Bool
-    var showTutorial: Bool
+    var usesKilograms: Bool = false
+    var enableNotifications: Bool = true
+    var enableRestTimerSound: Bool = true
+    var defaultRestTime: Int = 120 // in seconds
+    var enableProgressPhotos: Bool = false
+    var enableCloudSync: Bool = true
+    var showTutorial: Bool = true
     var dailyStepGoal: Int = 10000
 
     // Equipment, kept per unit so switching lbs/kg keeps sensible values.
@@ -87,16 +92,16 @@ class Settings {
     var barbellKg: Double = 20
     
     // Training Maxes - Always stored in pounds for consistency
-    var benchPressMax: Double
-    var squatMax: Double
-    var deadliftMax: Double
-    var overheadPressMax: Double
+    var benchPressMax: Double = 0
+    var squatMax: Double = 0
+    var deadliftMax: Double = 0
+    var overheadPressMax: Double = 0
     
     init(
         usesKilograms: Bool = false,
         enableNotifications: Bool = true,
         enableRestTimerSound: Bool = true,
-        defaultRestTime: Int = 90,
+        defaultRestTime: Int = 120,
         enableProgressPhotos: Bool = false,
         enableCloudSync: Bool = true,
         showTutorial: Bool = true,

@@ -82,6 +82,9 @@ struct ForgePlusView: View {
                 Label("Create your own running plans", systemImage: "figure.run")
                 Label("Swap exercises in any program", systemImage: "arrow.left.arrow.right")
                 Label("Add exercises to your training days", systemImage: "plus.rectangle.on.rectangle")
+                Label("Rest timer between sets", systemImage: "timer")
+                Label("Plate calculator", systemImage: "circle.grid.cross")
+                Label("Add and edit your own goals", systemImage: "target")
                 Label("Everything to come", systemImage: "plus.circle")
             }
 
