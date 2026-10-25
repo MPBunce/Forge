@@ -17,24 +17,27 @@ class FiveDayUpperLowerProgram: ProgramProtocol {
     }
     
     init() {
-        // Upper and Lower twice a week, plus a short arms and shoulders day.
+        // The same accessories every upper and every lower day, so they can be progressed;
+        // the main lift alternates (bench and overhead press, squat and deadlift) so both
+        // get trained heavy each week. The deadlift day uses leg curls instead of RDLs, so
+        // the hinge isn't doubled up.
+        // Plus a short arms and shoulders day.
         self.trainingDays = [
             TrainingDay(
                 dayIndex: 0,
-                dayName: "Upper",
+                dayName: "Upper · Bench",
                 day: [
                     Exercise(exerciseIndex: 0, name: "Bench Press", sets: SetScheme.straight(4, reps: 6)),
                     Exercise(exerciseIndex: 1, name: "Barbell Rows", sets: SetScheme.straight(4, reps: 8)),
-                    Exercise(exerciseIndex: 2, name: "Overhead Press", sets: SetScheme.straight(3, reps: 8)),
-                    Exercise(exerciseIndex: 3, name: "Lat Pulldowns", sets: SetScheme.straight(3, reps: 10)),
-                    Exercise(exerciseIndex: 4, name: "Barbell Curls", sets: SetScheme.straight(3, reps: 12)),
-                    Exercise(exerciseIndex: 5, name: "Tricep Extensions", sets: SetScheme.straight(3, reps: 12))
+                    Exercise(exerciseIndex: 2, name: "Lat Pulldowns", sets: SetScheme.straight(3, reps: 10)),
+                    Exercise(exerciseIndex: 3, name: "Barbell Curls", sets: SetScheme.straight(3, reps: 12)),
+                    Exercise(exerciseIndex: 4, name: "Tricep Extensions", sets: SetScheme.straight(3, reps: 12))
                 ],
                 completedDate: nil
             ),
             TrainingDay(
                 dayIndex: 1,
-                dayName: "Lower",
+                dayName: "Lower · Squat",
                 day: [
                     Exercise(exerciseIndex: 0, name: "Squat", sets: SetScheme.straight(4, reps: 6)),
                     Exercise(exerciseIndex: 1, name: "Romanian Deadlift", sets: SetScheme.straight(3, reps: 8)),
@@ -46,24 +49,23 @@ class FiveDayUpperLowerProgram: ProgramProtocol {
             ),
             TrainingDay(
                 dayIndex: 2,
-                dayName: "Upper",
+                dayName: "Upper · Press",
                 day: [
-                    Exercise(exerciseIndex: 0, name: "Bench Press", sets: SetScheme.straight(4, reps: 6)),
+                    Exercise(exerciseIndex: 0, name: "Overhead Press", sets: SetScheme.straight(4, reps: 6)),
                     Exercise(exerciseIndex: 1, name: "Barbell Rows", sets: SetScheme.straight(4, reps: 8)),
-                    Exercise(exerciseIndex: 2, name: "Overhead Press", sets: SetScheme.straight(3, reps: 8)),
-                    Exercise(exerciseIndex: 3, name: "Lat Pulldowns", sets: SetScheme.straight(3, reps: 10)),
-                    Exercise(exerciseIndex: 4, name: "Barbell Curls", sets: SetScheme.straight(3, reps: 12)),
-                    Exercise(exerciseIndex: 5, name: "Tricep Extensions", sets: SetScheme.straight(3, reps: 12))
+                    Exercise(exerciseIndex: 2, name: "Lat Pulldowns", sets: SetScheme.straight(3, reps: 10)),
+                    Exercise(exerciseIndex: 3, name: "Barbell Curls", sets: SetScheme.straight(3, reps: 12)),
+                    Exercise(exerciseIndex: 4, name: "Tricep Extensions", sets: SetScheme.straight(3, reps: 12))
                 ],
                 completedDate: nil
             ),
             TrainingDay(
                 dayIndex: 3,
-                dayName: "Lower",
+                dayName: "Lower · Deadlift",
                 day: [
-                    Exercise(exerciseIndex: 0, name: "Squat", sets: SetScheme.straight(4, reps: 6)),
-                    Exercise(exerciseIndex: 1, name: "Romanian Deadlift", sets: SetScheme.straight(3, reps: 8)),
-                    Exercise(exerciseIndex: 2, name: "Leg Press", sets: SetScheme.straight(3, reps: 10)),
+                    Exercise(exerciseIndex: 0, name: "Deadlift", sets: SetScheme.straight(3, reps: 5)),
+                    Exercise(exerciseIndex: 1, name: "Leg Press", sets: SetScheme.straight(3, reps: 10)),
+                    Exercise(exerciseIndex: 2, name: "Leg Curls", sets: SetScheme.straight(3, reps: 12)),
                     Exercise(exerciseIndex: 3, name: "Calf Raises", sets: SetScheme.straight(4, reps: 12)),
                     Exercise(exerciseIndex: 4, name: "Abs", sets: SetScheme.straight(3, reps: 15))
                 ],

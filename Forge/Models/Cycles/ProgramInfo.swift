@@ -22,6 +22,7 @@ extension ProgramType {
         case .upperLowerFourDay: "4 days a week"
         case .upperLowerFiveDay: "5 days a week"
         case .hybridUpperLower: "4 days a week · pairs with Hybrid Runs"
+        case .dumbbellUpperLower: "4 days a week · dumbbells only"
         }
     }
 
@@ -49,9 +50,11 @@ extension ProgramType {
         case .pushPullLegs:
             "Push (chest, shoulders, triceps), pull (back, biceps) and legs. Run it 3 days a week for one hit per muscle, or twice through for 6 days. Add weight or reps when you hit the top of each rep range."
         case .upperLowerFourDay:
-            "One upper day and one lower day, each done twice a week with the same lifts, so you can beat last time every session. A balanced middle ground between strength and size; add weight when you hit the top of the rep range."
+            "Upper and lower twice a week. The main lift alternates (bench and overhead press, squat and deadlift) and the rest stays the same, so you can beat last time every session. Add weight when you hit the top of the rep range."
         case .upperLowerFiveDay:
             "The four-day upper and lower split, plus a short arms and shoulders day for extra volume. Add weight when you hit the top of the rep range."
+        case .dumbbellUpperLower:
+            "Upper and lower twice a week with just a pair of dumbbells. Every lower day is the same (split squats, RDLs, calves, abs) and so is every upper day (a press, a row, shoulder press, laterals, curls, triceps), so you can beat last time each session. Prefer lunges? Swap any lift. When you hit the top of the rep range on every set, move up a dumbbell size."
         case .hybridUpperLower:
             "Low-volume, high-intensity lifting for runners. Lower on Monday and Friday, upper on Wednesday and Sunday. Pair it with the Hybrid Runs plan in Training › Running for an easy run Tuesday, a tempo run Thursday and a long run Saturday. The same five lifts each lower day and each upper day, every working set to failure: about 4 sets per muscle group (lower: 4 quads, 4 hamstrings, 4 glutes, 3 abs, 3 calves; upper: 4 chest, 4 back, 3 shoulders, 4 arms). Warm up first, then aim for 8+ reps on compounds and 12+ on accessories. When you beat the target, add weight next time."
         }

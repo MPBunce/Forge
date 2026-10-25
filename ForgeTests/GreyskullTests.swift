@@ -79,3 +79,26 @@ struct DayPagerTests {
         #expect(t3 == "Day 2 · Pull")
     }
 }
+
+struct UpperLowerTests {
+    @Test func mainLiftAlternatesAndTheRestRepeats() {
+        let days = UpperLowerProgram().trainingDays
+        let mains = days.map { $0.day[0].name }
+        #expect(mains == ["Bench Press", "Squat", "Overhead Press", "Deadlift"])
+        // Upper accessories are the same both days.
+        #expect(Array(days[0].day.dropFirst().map(\.name)) == Array(days[2].day.dropFirst().map(\.name)))
+        let distinct = Set(days.flatMap { $0.day.map(\.name) })
+        #expect(distinct.count == 13)
+    }
+}
+
+struct DumbbellUpperLowerTests {
+    @Test func sameLowerAndUpperEachTime() {
+        let days = DumbbellUpperLowerProgram().trainingDays
+        #expect(days.map(\.dayName) == ["Upper", "Lower", "Upper", "Lower"])
+        #expect(days[1].day.map(\.name) == days[3].day.map(\.name))
+        #expect(days[0].day.map(\.name) == days[2].day.map(\.name))
+        #expect(days[1].day.map(\.name) == ["Dumbbell Split Squat", "Dumbbell RDL", "Dumbbell Calf Raise", "Abs"])
+        #expect(Template.loadTemplates().contains { $0.programType == .dumbbellUpperLower })
+    }
+}
