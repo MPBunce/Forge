@@ -11,6 +11,8 @@ struct CyclesDetailView: View {
     @State private var selectedDayIndex: Int = -1
     @State private var addingExercise = false
     @State private var showingPlus = false
+    /// The exercise being swapped in a running cycle (Forge Plus).
+    @State private var swapping: Exercise?
     private var plus = ForgePlus.shared
 
     private var selectedCycle: Cycles? {
@@ -60,6 +62,19 @@ struct CyclesDetailView: View {
         .navigationTitle(cycle?.template ?? "Cycle Detail")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showingPlus) { ForgePlusView() }
+        .sheet(item: $swapping) { exercise in
+            NavigationStack {
+                ExerciseSwapPicker(
+                    lift: ExerciseSwaps.split(exercise.name).base,
+                    choice: Binding(get: { ExerciseSwaps.split(exercise.name).base },
+                                    set: { swap(exercise, to: $0) }),
+                    note: "Changes it on this day and every day still to do. Finished days keep what you did."
+                )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { swapping = nil } }
+                }
+            }
+        }
         .safeAreaInset(edge: .bottom) { RestTimerBar() }
         .onAppear {
             // Open on the next day to do.
@@ -134,6 +149,11 @@ struct CyclesDetailView: View {
                                 ExerciseRowView(exercise: exercise)
                             }
                             .deleteDisabled(!plus.isActive)
+                            .contextMenu {
+                                Button("Swap Exercise", systemImage: "arrow.left.arrow.right") {
+                                    if plus.isActive { swapping = exercise } else { showingPlus = true }
+                                }
+                            }
                         }
                     }
                     .onDelete { offsets in
@@ -269,6 +289,19 @@ struct CyclesDetailView: View {
             }
         }
         try? context.save()
+    }
+
+    /// Renames a lift on the open day and every day not yet done, keeping sets and reps.
+    private func swap(_ exercise: Exercise, to replacement: String) {
+        guard let cycle = selectedCycle else { return }
+        let lift = ExerciseSwaps.split(exercise.name).base
+        let name = replacement.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty, name != lift else { return }
+        for day in cycle.trainingDays where day.completedDate == nil || day.dayIndex == validSelectedDayIndex {
+            ExerciseSwaps.apply([lift: name], to: [day])
+        }
+        try? context.save()
+        swapping = nil
     }
 
     private func toggleDayCompletion(_ trainingDay: TrainingDay) {

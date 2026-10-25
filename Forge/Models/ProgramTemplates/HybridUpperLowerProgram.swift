@@ -30,37 +30,29 @@ final class HybridUpperLowerProgram: ProgramProtocol {
         let heavy = { (sets: Int) in SetScheme.toFailure(sets, reps: 8) }
         let light = { (sets: Int) in SetScheme.toFailure(sets, reps: 12) }
 
-        // Five exercises a day. Lower: quad, hamstring, glute, abs, calves.
-        // Upper: push, pull, lateral raise, biceps, triceps.
+        // One lower and one upper day, each done twice a week with the same five lifts,
+        // so each one comes up twice and you can beat last time.
+        // Lower: quad, hamstring, glute, abs, calves. Upper: push, pull, laterals, biceps, triceps.
+        // Functions, so each day gets its own sets rather than sharing them.
+        let lower = { () -> [(String, [ExerciseSet])] in [
+            ("Squat", heavy(4)),
+            ("Romanian Deadlift", heavy(4)),
+            ("Hip Thrust", heavy(4)),
+            ("Hanging Leg Raise", light(3)),
+            ("Standing Calf Raise", light(3)),
+        ] }
+        let upper = { () -> [(String, [ExerciseSet])] in [
+            ("Incline Dumbbell Press", heavy(4)),
+            ("Lat Pulldown", heavy(4)),
+            ("Lateral Raise", light(3)),
+            ("Incline Dumbbell Curl", light(2)),
+            ("Tricep Pushdown", light(2)),
+        ] }
         trainingDays = [
-            Self.day(0, "Mon · Lower A", [
-                ("Squat", heavy(4)),
-                ("Romanian Deadlift", heavy(4)),
-                ("Hip Thrust", heavy(4)),
-                ("Hanging Leg Raise", light(3)),
-                ("Standing Calf Raise", light(3)),
-            ]),
-            Self.day(1, "Wed · Upper A", [
-                ("Incline Dumbbell Press", heavy(4)),
-                ("Lat Pulldown", heavy(4)),
-                ("Lateral Raise", light(3)),
-                ("Incline Dumbbell Curl", light(2)),
-                ("Tricep Pushdown", light(2)),
-            ]),
-            Self.day(2, "Fri · Lower B", [
-                ("Leg Press", heavy(4)),
-                ("Seated Leg Curl", light(4)),
-                ("Bulgarian Split Squat", heavy(4)),
-                ("Cable Crunch", light(3)),
-                ("Seated Calf Raise", light(3)),
-            ]),
-            Self.day(3, "Sun · Upper B", [
-                ("Bench Press", heavy(4)),
-                ("Chest-Supported Row", heavy(4)),
-                ("Lateral Raise", light(3)),
-                ("Hammer Curl", light(2)),
-                ("Overhead Tricep Extension", light(2)),
-            ]),
+            Self.day(0, "Mon · Lower", lower()),
+            Self.day(1, "Wed · Upper", upper()),
+            Self.day(2, "Fri · Lower", lower()),
+            Self.day(3, "Sun · Upper", upper()),
         ]
     }
 }

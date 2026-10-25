@@ -69,6 +69,8 @@ enum ExerciseSwaps {
             options = ["Pull-ups", "Chin Ups", "Weighted Pullup", "Lat Pulldowns", "Neutral Grip Pull-ups", "Assisted Pull-ups"]
         case name.contains("curl") && !name.contains("leg") && !name.contains("hamstring"):
             options = ["Barbell Curls", "EZ Bar Curls", "Dumbbell Curls", "Hammer Curls", "Incline Curls", "Cable Curls", "Preacher Curls"]
+        case name.contains("hip thrust") || name.contains("glute"):
+            options = ["Hip Thrust", "Glute Bridge", "Bulgarian Split Squats", "Cable Glute Kickback", "Hip Abduction"]
         case name.contains("leg curl") || name.contains("hamstring"):
             options = ["Leg Curls", "Seated Leg Curls", "Nordic Curls", "Glute-Ham Raises", "Romanian Deadlift"]
         case name.contains("tricep") || name.contains("push down") || name.contains("pushdown") || name.contains("skull") || name == "dips":

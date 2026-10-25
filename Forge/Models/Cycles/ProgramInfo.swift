@@ -49,11 +49,11 @@ extension ProgramType {
         case .pushPullLegs:
             "Push (chest, shoulders, triceps), pull (back, biceps) and legs. Run it 3 days a week for one hit per muscle, or twice through for 6 days. Add weight or reps when you hit the top of each rep range."
         case .upperLowerFourDay:
-            "Alternate upper body and lower body days, training each twice a week. A balanced middle ground between strength and size; add weight when you hit the top of the rep range."
+            "One upper day and one lower day, each done twice a week with the same lifts, so you can beat last time every session. A balanced middle ground between strength and size; add weight when you hit the top of the rep range."
         case .upperLowerFiveDay:
-            "An upper and lower split over five days with an extra upper day, for more chest, back and arm volume. Add weight when you hit the top of the rep range."
+            "The four-day upper and lower split, plus a short arms and shoulders day for extra volume. Add weight when you hit the top of the rep range."
         case .hybridUpperLower:
-            "Low-volume, high-intensity lifting for runners. Lower on Monday and Friday, upper on Wednesday and Sunday. Pair it with the Hybrid Runs plan in Training › Running for an easy run Tuesday, a tempo run Thursday and a long run Saturday. Five exercises a day, every working set to failure: about 4 sets per muscle group (lower: 4 quads, 4 hamstrings, 4 glutes, 3 abs, 3 calves; upper: 4 chest, 4 back, 3 shoulders, 4 arms). Warm up first, then aim for 8+ reps on compounds and 12+ on accessories. When you beat the target, add weight next time."
+            "Low-volume, high-intensity lifting for runners. Lower on Monday and Friday, upper on Wednesday and Sunday. Pair it with the Hybrid Runs plan in Training › Running for an easy run Tuesday, a tempo run Thursday and a long run Saturday. The same five lifts each lower day and each upper day, every working set to failure: about 4 sets per muscle group (lower: 4 quads, 4 hamstrings, 4 glutes, 3 abs, 3 calves; upper: 4 chest, 4 back, 3 shoulders, 4 arms). Warm up first, then aim for 8+ reps on compounds and 12+ on accessories. When you beat the target, add weight next time."
         }
     }
 }

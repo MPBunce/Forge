@@ -136,9 +136,10 @@ struct ProgramStartView: View {
 }
 
 /// Pick a variation for one lift: keep it, choose a suggestion, or type any exercise.
-private struct ExerciseSwapPicker: View {
+struct ExerciseSwapPicker: View {
     let lift: String
     @Binding var choice: String
+    var note: String? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var custom = ""
 
@@ -146,6 +147,8 @@ private struct ExerciseSwapPicker: View {
         List {
             Section {
                 row(lift, detail: "As written in the program")
+            } footer: {
+                if let note { Text(note) }
             }
 
             let options = ExerciseSwaps.alternatives(for: lift)
