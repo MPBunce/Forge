@@ -268,6 +268,7 @@ struct CyclesDetailView: View {
                 day.completedDate = day.day.allSatisfy { $0.sets.allSatisfy(\.isCompleted) } ? (day.completedDate ?? Date()) : nil
             }
         }
+        try? context.save()
     }
 
     private func toggleDayCompletion(_ trainingDay: TrainingDay) {
@@ -276,6 +277,8 @@ struct CyclesDetailView: View {
         } else {
             trainingDay.completedDate = Date()
         }
+        // Save now so the Training list and Today pick it up straight away, not at the next autosave.
+        try? context.save()
     }
     
     /// "Day 2: Upper A", or just "Day 2" when the day has no name of its own.
