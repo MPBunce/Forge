@@ -32,7 +32,7 @@ struct HybridUpperLowerTests {
         let fiveEach = days.allSatisfy { $0.day.count == 5 }
         #expect(names == ["Mon · Lower A", "Wed · Upper A", "Fri · Lower B", "Sun · Upper B"])
         #expect(indexes == [0, 1, 2, 3])
-        #expect(lowerSets == 14)  // 2 squat + 4 quad + 4 ham + 4 glute
+        #expect(lowerSets == 18)  // 4 quad + 4 ham + 4 glute + 3 abs + 3 calves
         #expect(upperSets == 15)  // 4 chest + 4 back + 3 shoulder + 4 arms
         #expect(allToFailure)
         #expect(fiveEach)

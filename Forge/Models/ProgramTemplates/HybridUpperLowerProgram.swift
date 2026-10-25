@@ -30,15 +30,15 @@ final class HybridUpperLowerProgram: ProgramProtocol {
         let heavy = { (sets: Int) in SetScheme.toFailure(sets, reps: 8) }
         let light = { (sets: Int) in SetScheme.toFailure(sets, reps: 12) }
 
-        // Five exercises a day. Lower: 2 squat, 4 quad, 4 hamstring, 4 glute.
-        // Upper: 4 push, 4 pull, 3 lateral raise, 4 arms.
+        // Five exercises a day. Lower: quad, hamstring, glute, abs, calves.
+        // Upper: push, pull, lateral raise, biceps, triceps.
         trainingDays = [
             Self.day(0, "Mon · Lower A", [
-                ("Squat", heavy(2)),
-                ("Leg Extension", light(4)),
-                ("Romanian Deadlift", heavy(2)),
-                ("Lying Leg Curl", light(2)),
+                ("Squat", heavy(4)),
+                ("Romanian Deadlift", heavy(4)),
                 ("Hip Thrust", heavy(4)),
+                ("Hanging Leg Raise", light(3)),
+                ("Standing Calf Raise", light(3)),
             ]),
             Self.day(1, "Wed · Upper A", [
                 ("Incline Dumbbell Press", heavy(4)),
@@ -48,11 +48,11 @@ final class HybridUpperLowerProgram: ProgramProtocol {
                 ("Tricep Pushdown", light(2)),
             ]),
             Self.day(2, "Fri · Lower B", [
-                ("Squat", heavy(2)),
                 ("Leg Press", heavy(4)),
-                ("Stiff-Leg Deadlift", heavy(2)),
-                ("Seated Leg Curl", light(2)),
-                ("Cable Glute Kickback", light(4)),
+                ("Seated Leg Curl", light(4)),
+                ("Bulgarian Split Squat", heavy(4)),
+                ("Cable Crunch", light(3)),
+                ("Seated Calf Raise", light(3)),
             ]),
             Self.day(3, "Sun · Upper B", [
                 ("Bench Press", heavy(4)),
