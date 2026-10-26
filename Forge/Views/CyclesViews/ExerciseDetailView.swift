@@ -51,54 +51,52 @@ struct LastSessionCard: View {
     }
 }
 
-/// How to do the lift, folded away until it's wanted.
+/// How to do the lift: one slim row until it's wanted, then short steps in small type.
 struct HowToCard: View {
     let name: String
     let guide: LiftGuide
     @Binding var isExpanded: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Button {
-                withAnimation(.snappy) { isExpanded.toggle() }
-            } label: {
-                HStack {
-                    Label("How to do it", systemImage: "figure.strengthtraining.traditional")
-                        .font(.subheadline.weight(.semibold))
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 12) {
+                Button {
+                    withAnimation(.snappy) { isExpanded.toggle() }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text("How to")
+                            .font(.footnote.weight(.semibold))
+                        Image(systemName: "chevron.down")
+                            .font(.caption2.weight(.semibold))
+                            .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundStyle(.secondary)
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                if let url = LiftGuide.videoURL(for: name) {
+                    Link(destination: url) {
+                        Label("Video", systemImage: "play.fill")
+                            .font(.footnote.weight(.medium))
+                    }
+                }
             }
-            .buttonStyle(.plain)
 
             if isExpanded {
                 ForEach(Array(guide.steps.enumerated()), id: \.offset) { index, step in
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text("\(index + 1)")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 14)
-                        Text(step).font(.subheadline)
-                    }
+                    Text("\(index + 1). \(step)")
+                        .font(.footnote)
                 }
-                Label(guide.mistake, systemImage: "exclamationmark.triangle")
-                    .font(.subheadline)
+                Text("Avoid: \(guide.mistake)")
+                    .font(.footnote)
                     .foregroundStyle(.orange)
-                if let url = LiftGuide.videoURL(for: name) {
-                    Link(destination: url) {
-                        Label("Watch how it's done", systemImage: "play.rectangle")
-                            .font(.subheadline.weight(.medium))
-                    }
-                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
         .padding(.horizontal)
         .padding(.bottom, 8)
     }
