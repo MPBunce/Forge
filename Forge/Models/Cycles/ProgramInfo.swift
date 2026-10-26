@@ -7,6 +7,40 @@
 
 import Foundation
 
+/// How the program list is grouped, by what someone wants from training.
+enum ProgramGroup: String, CaseIterable, Identifiable {
+    case beginner = "New to lifting"
+    case strength = "Get stronger"
+    case muscle = "Build muscle"
+    case dumbbells = "Dumbbells only"
+    case runners = "For runners"
+
+    var id: Self { self }
+
+    var icon: String {
+        switch self {
+        case .beginner: "leaf"
+        case .strength: "scalemass"
+        case .muscle: "figure.strengthtraining.traditional"
+        case .dumbbells: "dumbbell"
+        case .runners: "figure.run"
+        }
+    }
+}
+
+extension ProgramType {
+    var group: ProgramGroup {
+        switch self {
+        case .greySkull: .beginner
+        case .fiveThreeOneBasicProgram, .fiveThreeOneBBBProgram, .nSuns4Days, .nSuns5Days,
+             .nSuns6DaysSquat, .nSuns6DaysDeadlift: .strength
+        case .upperLowerFourDay, .upperLowerFiveDay, .pushPullLegs, .arnoldProgram, .menzer: .muscle
+        case .dumbbellUpperLower: .dumbbells
+        case .hybridUpperLower: .runners
+        }
+    }
+}
+
 extension ProgramType {
     /// How often you train, for the program list.
     var frequency: String {

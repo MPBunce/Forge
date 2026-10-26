@@ -150,15 +150,22 @@ struct CycleSelectionSheet: View {
                     }
                 }
                 
-                Section("Programs") {
-                    ForEach(Template.loadTemplates()) { template in
-                        templateRow(name: template.name, description: template.description, duration: template.programType.frequency) {
-                            startingTemplate = template
+                ForEach(ProgramGroup.allCases) { group in
+                    let templates = Template.loadTemplates().filter { $0.programType.group == group }
+                    if !templates.isEmpty {
+                        Section {
+                            ForEach(templates) { template in
+                                templateRow(name: template.name, description: template.description, duration: template.programType.frequency) {
+                                    startingTemplate = template
+                                }
+                            }
+                        } header: {
+                            Label(group.rawValue, systemImage: group.icon)
                         }
                     }
                 }
             }
-            .navigationTitle("Select a Cycle")
+            .navigationTitle("Choose a Program")
             .navigationDestination(isPresented: $showingPlus) {
                 ForgePlusView()
             }

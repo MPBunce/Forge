@@ -112,6 +112,7 @@ struct CustomProgressBar: View {
 // MARK: - Sets Section Component
 struct ExerciseSetsSection: View {
     let sets: [ExerciseSet]
+    var pbSetID: PersistentIdentifier? = nil
     @Binding var showingAddSetSheet: Bool
     let canAlterSets: Bool
     let onDeleteSet: (ExerciseSet) -> Void
@@ -132,6 +133,7 @@ struct ExerciseSetsSection: View {
             } else {
                 SetsList(
                     sets: sets,
+                    pbSetID: pbSetID,
                     canAlterSets: canAlterSets,
                     onDeleteSet: onDeleteSet,
                     onEditSet: onEditSet
@@ -174,6 +176,7 @@ struct SetsSectionHeader: View {
 // MARK: - Sets List Component
 struct SetsList: View {
     let sets: [ExerciseSet]
+    var pbSetID: PersistentIdentifier? = nil
     let canAlterSets: Bool
     let onDeleteSet: (ExerciseSet) -> Void
     let onEditSet: (ExerciseSet) -> Void
@@ -184,6 +187,7 @@ struct SetsList: View {
                 ModernSetRowView(
                     set: set,
                     number: index + 1,
+                    isPB: set.persistentModelID == pbSetID,
                     canDelete: canAlterSets,
                     onDelete: { onDeleteSet(set) },
                     onEdit: { onEditSet(set) }
@@ -229,6 +233,7 @@ struct ModernSetRowView: View {
     @Environment(\.restSeconds) private var restSeconds
     let set: ExerciseSet
     let number: Int
+    var isPB = false
     let canDelete: Bool
     let onDelete: () -> Void
     let onEdit: () -> Void
@@ -260,6 +265,16 @@ struct ModernSetRowView: View {
                 .accessibilityHint("Edit weight and reps")
             } else {
                 SetDisplayValues(set: set)
+            }
+
+            if isPB {
+                Label("PB", systemImage: "trophy.fill")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(.yellow))
+                    .accessibilityLabel("Personal best")
             }
 
             Spacer(minLength: 0)

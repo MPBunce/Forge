@@ -17,17 +17,30 @@ struct LastSession {
 }
 
 struct LastSessionCard: View {
-    let session: LastSession
+    let session: LastSession?
     let unit: String
+    var best: PersonalBests.Best? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Last time · \(session.when)")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text(session.sets.map { "\(WeightConverter.format($0.weight ?? 0)) × \($0.reps ?? 0)" }.joined(separator: "   "))
-                .font(.body.monospacedDigit())
-            + Text("  \(unit)").font(.footnote).foregroundStyle(.secondary)
+            if let session {
+                Text("Last time · \(session.when)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text(session.sets.map { "\(WeightConverter.format($0.weight ?? 0)) × \($0.reps ?? 0)" }.joined(separator: "   "))
+                    .font(.body.monospacedDigit())
+                + Text("  \(unit)").font(.footnote).foregroundStyle(.secondary)
+            }
+            if let best {
+                Label {
+                    Text("PB \(WeightConverter.format(best.weight)) × \(best.reps) \(best.usesKilograms ? "kg" : "lbs")")
+                    + Text(best.date.map { " · \($0.formatted(.dateTime.month(.abbreviated).day()))" } ?? "")
+                        .foregroundStyle(.secondary)
+                } icon: {
+                    Image(systemName: "trophy.fill").foregroundStyle(.yellow)
+                }
+                .font(.subheadline.monospacedDigit())
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -35,6 +48,59 @@ struct LastSessionCard: View {
         .padding(.horizontal)
         .padding(.bottom, 8)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// How to do the lift, folded away until it's wanted.
+struct HowToCard: View {
+    let name: String
+    let guide: LiftGuide
+    @Binding var isExpanded: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy) { isExpanded.toggle() }
+            } label: {
+                HStack {
+                    Label("How to do it", systemImage: "figure.strengthtraining.traditional")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                ForEach(Array(guide.steps.enumerated()), id: \.offset) { index, step in
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text("\(index + 1)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 14)
+                        Text(step).font(.subheadline)
+                    }
+                }
+                Label(guide.mistake, systemImage: "exclamationmark.triangle")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+                if let url = LiftGuide.videoURL(for: name) {
+                    Link(destination: url) {
+                        Label("Watch how it's done", systemImage: "play.rectangle")
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
+        .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 }
 
@@ -55,6 +121,11 @@ struct ExerciseDetailView: View {
     @State private var showingAddSetSheet = false
     @State private var editingSet: ExerciseSet? = nil
     @State private var lastTime: LastSession? = nil
+    /// The best this lift had been before today's sets, to spot a new PB.
+    @State private var previousBest: PersonalBests.Best?
+    @State private var announcedPB: PersistentIdentifier?
+    @State private var pbBanner: String?
+    @State private var showingHowTo = false
 
     private var exercise: Exercise? {
         cycle.trainingDays
@@ -69,10 +140,16 @@ struct ExerciseDetailView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 if let lastTime {
-                    LastSessionCard(session: lastTime, unit: cycle.weightUnit)
+                    LastSessionCard(session: lastTime, unit: cycle.weightUnit, best: previousBest)
+                } else if let previousBest {
+                    LastSessionCard(session: nil, unit: cycle.weightUnit, best: previousBest)
+                }
+                if let name = exercise?.name, let guide = LiftGuide.guide(for: name) {
+                    HowToCard(name: name, guide: guide, isExpanded: $showingHowTo)
                 }
                 ExerciseSetsSection(
                     sets: sets,
+                    pbSetID: pbSet(in: sets)?.persistentModelID,
                     showingAddSetSheet: $showingAddSetSheet,
                     canAlterSets: canAlterSets,
                     onDeleteSet: { set in deleteSet(set) },
@@ -84,6 +161,32 @@ struct ExerciseDetailView: View {
         .navigationTitle(exercise?.name ?? "")
         .navigationBarTitleDisplayMode(.large)
         .onAppear(perform: loadWeightStep)
+        .onChange(of: pbSet(in: sets)?.persistentModelID) { _, id in
+            guard let id, id != announcedPB, let set = sets.first(where: { $0.persistentModelID == id }) else { return }
+            announcedPB = id
+            withAnimation(.spring) {
+                pbBanner = "New PB · \(WeightConverter.format(set.weight ?? 0)) × \(set.reps ?? 0) \(cycle.weightUnit)"
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                withAnimation { pbBanner = nil }
+            }
+        }
+        .overlay(alignment: .top) {
+            if let pbBanner {
+                Label(pbBanner, systemImage: "trophy.fill")
+                    .font(.headline)
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    .background(Capsule().fill(.yellow))
+                    .shadow(radius: 8, y: 4)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .sensoryFeedback(.success, trigger: pbBanner)
+                    .accessibilityAddTraits(.isStaticText)
+            }
+        }
         .sheet(isPresented: $showingAddSetSheet) {
             AddSetView { weight, reps in
                 addSet(weight: weight, reps: reps)
@@ -111,6 +214,11 @@ struct ExerciseDetailView: View {
         .safeAreaInset(edge: .bottom) { RestTimerBar() }
     }
 
+    /// The set in this session that beats the lift's previous best, if one does.
+    private func pbSet(in sets: [ExerciseSet]) -> ExerciseSet? {
+        PersonalBests.newBest(among: sets, usesKilograms: cycle.usesKilograms, previous: previousBest)
+    }
+
     /// A pair of the smallest plates, in the cycle's unit. Read once when the screen opens.
     private func loadWeightStep() {
         let settings = (try? context.fetch(FetchDescriptor<Settings>()))?.first
@@ -122,6 +230,13 @@ struct ExerciseDetailView: View {
         let bar = cycle.usesKilograms ? (settings?.barbellKg ?? 20) : (settings?.barbellLbs ?? 45)
         self.bar = bar
         lastTime = findLastSession()
+        if let exercise {
+            let all = (try? context.fetch(FetchDescriptor<Cycles>())) ?? []
+            previousBest = PersonalBests.best(for: exercise.name, in: all,
+                                              excluding: Set(exercise.sets.map(\.persistentModelID)))
+            // A PB already logged on this screen earlier isn't announced again.
+            announcedPB = pbSet(in: exercise.orderedSets)?.persistentModelID
+        }
         weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
     }
 

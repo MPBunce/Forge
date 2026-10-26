@@ -133,14 +133,14 @@ extension Template {
             Template(
                 id: "FiveThreeOneBasicProgram",
                 name: "5/3/1",
-                description: "4 Week 5/3/1 Program",
+                description: "Slow, steady strength on the big four lifts",
                 duration: "4 weeks",
                 programType: .fiveThreeOneBasicProgram
             ),
             Template(
                 id: "FiveThreeOneBBBProgram",
                 name: "5/3/1 Big But Boring",
-                description: "4 Week 5/3/1 BBB Program",
+                description: "5/3/1 plus five sets of ten, for size",
                 duration: "4 weeks",
                 programType: .fiveThreeOneBBBProgram
             ),
@@ -149,21 +149,21 @@ extension Template {
             Template(
                 id: "ArnoldProgram",
                 name: "Arnold Split",
-                description: "Classic Arnold Schwarzenegger split routine",
+                description: "Chest and back, shoulders and arms, legs, each twice a week",
                 duration: "6 days",
                 programType: .arnoldProgram
             ),
             Template(
                 id: "GreySkull",
                 name: "Greyskull LP",
-                description: "Full Body 3x A Week",
+                description: "Add weight every session on a few big lifts",
                 duration: "2 weeks",
                 programType: .greySkull
             ),
             Template(
                 id: "classic-menzer",
                 name: "Classic Menzer Cycle",
-                description: "High-intensity training with extended rest periods",
+                description: "One all-out set per exercise, with lots of rest",
                 duration: "4 days",
                 programType: .menzer
             ),
@@ -172,28 +172,28 @@ extension Template {
             Template(
                 id: "nSuns4Day",
                 name: "nSuns 4 Day",
-                description: "4-day nSuns Program",
+                description: "High-volume strength, built on 5/3/1",
                 duration: "4 days",
                 programType: .nSuns4Days
             ),
             Template(
                 id: "nSuns5Day",
                 name: "nSuns 5 Day",
-                description: "5-day nSuns Program",
+                description: "nSuns with a fifth day",
                 duration: "5 days",
                 programType: .nSuns5Days
             ),
             Template(
                 id: "nSuns6DaySquat",
                 name: "nSuns 6 Day Squat",
-                description: "6-day nSuns Squat Program",
+                description: "Six days, with extra squat volume",
                 duration: "6 days",
                 programType: .nSuns6DaysSquat
             ),
             Template(
                 id: "nSuns6DayDeadlift",
                 name: "nSuns 6 Day Deadlift",
-                description: "6-day nSuns Deadlift Program",
+                description: "Six days, with extra deadlift volume",
                 duration: "6 days",
                 programType: .nSuns6DaysDeadlift
             ),
@@ -202,28 +202,28 @@ extension Template {
             Template(
                 id: "ppl",
                 name: "Push Pull Legs",
-                description: "Split training focusing on movement patterns",
+                description: "A push day, a pull day and a leg day",
                 duration: "3 days",
                 programType: .pushPullLegs
             ),
             Template(
                 id: "upper_lower_four",
                 name: "Upper Lower (4 Day)",
-                description: "4-day split alternating upper and lower body",
+                description: "Each muscle twice a week; the main lift alternates",
                 duration: "4 days",
                 programType: .upperLowerFourDay
             ),
             Template(
                 id: "upper_lower_five",
                 name: "Upper Lower (5 Day)",
-                description: "5-day split alternating upper and lower body",
+                description: "Upper Lower plus an arms and shoulders day",
                 duration: "5 days",
                 programType: .upperLowerFiveDay
             ),
             Template(
                 id: "dumbbell_upper_lower",
                 name: "Dumbbell Upper Lower",
-                description: "4-day upper and lower split with only dumbbells",
+                description: "Upper and lower with just a pair of dumbbells",
                 duration: "4 days",
                 programType: .dumbbellUpperLower
             ),
