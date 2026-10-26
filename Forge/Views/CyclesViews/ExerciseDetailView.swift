@@ -16,92 +16,6 @@ struct LastSession {
     var topWeight: Double? { sets.compactMap(\.weight).max() }
 }
 
-struct LastSessionCard: View {
-    let session: LastSession?
-    let unit: String
-    var best: PersonalBests.Best? = nil
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let session {
-                Text("Last time · \(session.when)")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text(session.sets.map { "\(WeightConverter.format($0.weight ?? 0)) × \($0.reps ?? 0)" }.joined(separator: "   "))
-                    .font(.body.monospacedDigit())
-                + Text("  \(unit)").font(.footnote).foregroundStyle(.secondary)
-            }
-            if let best {
-                Label {
-                    Text("PB \(WeightConverter.format(best.weight)) × \(best.reps) \(best.usesKilograms ? "kg" : "lbs")")
-                    + Text(best.date.map { " · \($0.formatted(.dateTime.month(.abbreviated).day()))" } ?? "")
-                        .foregroundStyle(.secondary)
-                } icon: {
-                    Image(systemName: "trophy.fill").foregroundStyle(.yellow)
-                }
-                .font(.subheadline.monospacedDigit())
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
-        .padding(.horizontal)
-        .padding(.bottom, 8)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// How to do the lift: one slim row until it's wanted, then short steps in small type.
-struct HowToCard: View {
-    let name: String
-    let guide: LiftGuide
-    @Binding var isExpanded: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 12) {
-                Button {
-                    withAnimation(.snappy) { isExpanded.toggle() }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text("How to")
-                            .font(.footnote.weight(.semibold))
-                        Image(systemName: "chevron.down")
-                            .font(.caption2.weight(.semibold))
-                            .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        Spacer(minLength: 0)
-                    }
-                    .foregroundStyle(.secondary)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                if let url = LiftGuide.videoURL(for: name) {
-                    Link(destination: url) {
-                        Label("Video", systemImage: "play.fill")
-                            .font(.footnote.weight(.medium))
-                    }
-                }
-            }
-
-            if isExpanded {
-                ForEach(Array(guide.steps.enumerated()), id: \.offset) { index, step in
-                    Text("\(index + 1). \(step)")
-                        .font(.footnote)
-                }
-                Text("Avoid: \(guide.mistake)")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
-        .padding(.horizontal)
-        .padding(.bottom, 8)
-    }
-}
-
 // MARK: - Main Exercise Detail View
 // Changes are written straight to the model as they happen, like the set status taps,
 // so there is no separate Save step that could be skipped or half-applied.
@@ -121,9 +35,6 @@ struct ExerciseDetailView: View {
     @State private var lastTime: LastSession? = nil
     /// The best this lift had been before today's sets, to spot a new PB.
     @State private var previousBest: PersonalBests.Best?
-    @State private var announcedPB: PersistentIdentifier?
-    @State private var pbBanner: String?
-    @State private var showingHowTo = false
 
     private var exercise: Exercise? {
         cycle.trainingDays
@@ -137,14 +48,6 @@ struct ExerciseDetailView: View {
 
         ScrollView {
             LazyVStack(spacing: 0) {
-                if let lastTime {
-                    LastSessionCard(session: lastTime, unit: cycle.weightUnit, best: previousBest)
-                } else if let previousBest {
-                    LastSessionCard(session: nil, unit: cycle.weightUnit, best: previousBest)
-                }
-                if let name = exercise?.name, let guide = LiftGuide.guide(for: name) {
-                    HowToCard(name: name, guide: guide, isExpanded: $showingHowTo)
-                }
                 ExerciseSetsSection(
                     sets: sets,
                     pbSetID: pbSet(in: sets)?.persistentModelID,
@@ -159,32 +62,6 @@ struct ExerciseDetailView: View {
         .navigationTitle(exercise?.name ?? "")
         .navigationBarTitleDisplayMode(.large)
         .onAppear(perform: loadWeightStep)
-        .onChange(of: pbSet(in: sets)?.persistentModelID) { _, id in
-            guard let id, id != announcedPB, let set = sets.first(where: { $0.persistentModelID == id }) else { return }
-            announcedPB = id
-            withAnimation(.spring) {
-                pbBanner = "New PB · \(WeightConverter.format(set.weight ?? 0)) × \(set.reps ?? 0) \(cycle.weightUnit)"
-            }
-            Task {
-                try? await Task.sleep(for: .seconds(3))
-                withAnimation { pbBanner = nil }
-            }
-        }
-        .overlay(alignment: .top) {
-            if let pbBanner {
-                Label(pbBanner, systemImage: "trophy.fill")
-                    .font(.headline)
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 12)
-                    .background(Capsule().fill(.yellow))
-                    .shadow(radius: 8, y: 4)
-                    .padding(.top, 8)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .sensoryFeedback(.success, trigger: pbBanner)
-                    .accessibilityAddTraits(.isStaticText)
-            }
-        }
         .sheet(isPresented: $showingAddSetSheet) {
             AddSetView { weight, reps in
                 addSet(weight: weight, reps: reps)
@@ -232,8 +109,6 @@ struct ExerciseDetailView: View {
             let all = (try? context.fetch(FetchDescriptor<Cycles>())) ?? []
             previousBest = PersonalBests.best(for: exercise.name, in: all,
                                               excluding: Set(exercise.sets.map(\.persistentModelID)))
-            // A PB already logged on this screen earlier isn't announced again.
-            announcedPB = pbSet(in: exercise.orderedSets)?.persistentModelID
         }
         weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
     }

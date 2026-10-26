@@ -30,26 +30,6 @@ struct PersonalBestTests {
     }
 }
 
-struct LiftGuideTests {
-    @Test func everyBuiltInLiftHasAHowTo() {
-        let settings = UserSettings(from: Settings.defaultSettings)
-        var missing: Set<String> = []
-        for template in Template.loadTemplates() {
-            for exercise in template.createCycle(with: settings).trainingDays.flatMap(\.day) where !exercise.isCheckOff {
-                if LiftGuide.guide(for: exercise.name) == nil { missing.insert(exercise.name) }
-            }
-        }
-        #expect(missing.isEmpty, "No how-to for: \(missing.sorted().joined(separator: ", "))")
-    }
-
-    @Test func specificGuidesWinOverGeneralOnes() {
-        #expect(LiftGuide.guide(for: "Leg Curls")?.steps.first?.contains("pivot") == true)
-        #expect(LiftGuide.guide(for: "Incline Dumbbell Curl")?.steps.first?.contains("elbows") == true)
-        #expect(LiftGuide.guide(for: "Front Squat")?.steps.first?.contains("front of your shoulders") == true)
-        #expect(LiftGuide.guide(for: "Press") != nil)
-    }
-}
-
 struct ProgramGroupTests {
     @Test func everyProgramHasAGroup() {
         let groups = Set(Template.loadTemplates().map(\.programType.group))
