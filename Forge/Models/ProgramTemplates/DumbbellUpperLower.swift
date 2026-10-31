@@ -31,8 +31,8 @@ final class DumbbellUpperLowerProgram: ProgramProtocol {
 
     /// Main lifts 5–8 reps, accessories 12–20.
     static let upper: [(String, Int)] = [
-        ("Pull-up", 5),
         ("Dumbbell Bench Press", 5),
+        ("Pull-up", 5),
         ("Dumbbell Fly", 12),
         ("Dumbbell Lateral Raise", 12),
         ("Dumbbell Curl", 12),
