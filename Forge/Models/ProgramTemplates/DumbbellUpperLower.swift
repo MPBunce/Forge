@@ -2,10 +2,9 @@
 //  DumbbellUpperLower.swift
 //  Forge
 //
-//  Peter Christian-style upper/lower for a home gym (pull-up bar, flat bench, adjustable
-//  dumbbells). Two working sets per exercise, both to failure; every muscle twice a week.
-//  Days 1 and 2 are PR days (beat last week), Days 3 and 4 are Mastery days (match it,
-//  or go about 5% lighter, with cleaner reps). Lower days are all single-leg work.
+//  Upper/lower for a home gym (pull-up bar, flat bench, adjustable dumbbells). Two working
+//  sets per exercise, both to failure; every muscle twice a week; lower days are all
+//  single-leg work.
 //
 
 import Foundation
@@ -50,10 +49,10 @@ final class DumbbellUpperLowerProgram: ProgramProtocol {
 
     init() {
         trainingDays = [
-            Self.day(0, "Mon · Upper · PR", Self.upper),
-            Self.day(1, "Tue · Lower · PR", Self.lower),
-            Self.day(2, "Thu · Upper · Mastery", Self.upper),
-            Self.day(3, "Fri · Lower · Mastery", Self.lower),
+            Self.day(0, "Mon · Upper", Self.upper),
+            Self.day(1, "Tue · Lower", Self.lower),
+            Self.day(2, "Thu · Upper", Self.upper),
+            Self.day(3, "Fri · Lower", Self.lower),
         ]
     }
 }

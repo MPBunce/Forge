@@ -93,9 +93,9 @@ struct UpperLowerTests {
 }
 
 struct DumbbellUpperLowerTests {
-    @Test func prThenMasteryWithTheSameLifts() {
+    @Test func sameLiftsEachUpperAndLowerDay() {
         let days = DumbbellUpperLowerProgram().trainingDays
-        #expect(days.map(\.dayName) == ["Mon · Upper · PR", "Tue · Lower · PR", "Thu · Upper · Mastery", "Fri · Lower · Mastery"])
+        #expect(days.map(\.dayName) == ["Mon · Upper", "Tue · Lower", "Thu · Upper", "Fri · Lower"])
         #expect(days[0].day.map(\.name) == days[2].day.map(\.name))
         #expect(days[1].day.map(\.name) == days[3].day.map(\.name))
         // Two sets, both to failure, on everything.
@@ -106,9 +106,9 @@ struct DumbbellUpperLowerTests {
 
     @Test func fullBodyIsThreeWorkouts() {
         let days = DumbbellFullBodyProgram().trainingDays
-        #expect(days.map(\.dayName) == ["Mon · A · PR", "Wed · B · PR", "Fri · C · Mastery"])
+        #expect(days.map(\.dayName) == ["Mon · A", "Wed · B", "Fri · C"])
         #expect(days.map { $0.day.count } == [7, 7, 6])
-        #expect(days[1].day.prefix(3).map(\.name) == ["Dips", "Pull-up (Mastery)", "Dumbbell Lateral Raise"])
+        #expect(days[1].day.prefix(3).map(\.name) == ["Dips", "Pull-up", "Dumbbell Lateral Raise"])
         #expect(Template.loadTemplates().contains { $0.programType == .dumbbellFullBody })
     }
 }

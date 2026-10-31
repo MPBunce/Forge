@@ -226,14 +226,14 @@ extension Template {
             Template(
                 id: "dumbbell_upper_lower",
                 name: "Dumbbell Upper Lower",
-                description: "Home gym upper/lower: PR and Mastery days",
+                description: "Home gym upper and lower, two sets to failure",
                 duration: "4 days",
                 programType: .dumbbellUpperLower
             ),
             Template(
                 id: "dumbbell_full_body",
                 name: "Dumbbell Full Body",
-                description: "Home gym full body: three workouts, PR and Mastery",
+                description: "Home gym full body, three workouts a week",
                 duration: "6 days",
                 programType: .dumbbellFullBody
             ),
