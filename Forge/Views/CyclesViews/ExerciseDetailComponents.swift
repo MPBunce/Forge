@@ -239,7 +239,7 @@ struct ModernSetRowView: View {
     let onEdit: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             SetStatusButton(set: set)
             
             Text("\(number)")
@@ -268,12 +268,17 @@ struct ModernSetRowView: View {
             }
 
             if isPB {
-                Label("PB", systemImage: "trophy.fill")
+                HStack(spacing: 2) {
+                    Image(systemName: "trophy.fill")
+                    Text("PB")
+                }
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(.black)
-                    .padding(.horizontal, 7)
+                    .padding(.horizontal, 6)
                     .padding(.vertical, 3)
                     .background(Capsule().fill(.yellow))
+                    .fixedSize()
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Personal best")
             }
 
@@ -364,11 +369,15 @@ struct SetDisplayValues: View {
             }
             .font(.body)
             .monospacedDigit()
+            // Never wrap "205" onto two lines when the row is busy.
+            .fixedSize()
 
             if set.isAmrap {
                 Text(set.amrapTargetReps.map { "AMRAP \($0)+" } ?? "AMRAP")
                     .font(.caption2)
                     .fontWeight(.medium)
+                    .lineLimit(1)
+                    .fixedSize()
                     .foregroundColor(.orange)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
