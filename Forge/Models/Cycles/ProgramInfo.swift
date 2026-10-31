@@ -35,7 +35,7 @@ extension ProgramType {
         case .fiveThreeOneBasicProgram, .fiveThreeOneBBBProgram, .nSuns4Days, .nSuns5Days,
              .nSuns6DaysSquat, .nSuns6DaysDeadlift: .strength
         case .upperLowerFourDay, .upperLowerFiveDay, .pushPullLegs, .arnoldProgram, .menzer: .muscle
-        case .dumbbellUpperLower: .dumbbells
+        case .dumbbellUpperLower, .dumbbellFullBody: .dumbbells
         case .hybridUpperLower: .runners
         }
     }
@@ -56,7 +56,8 @@ extension ProgramType {
         case .upperLowerFourDay: "4 days a week"
         case .upperLowerFiveDay: "5 days a week"
         case .hybridUpperLower: "4 days a week · pairs with Hybrid Runs"
-        case .dumbbellUpperLower: "4 days a week · dumbbells only"
+        case .dumbbellUpperLower: "4 days a week · 2 sets to failure"
+        case .dumbbellFullBody: "3 days a week · 2 sets to failure"
         }
     }
 
@@ -88,7 +89,9 @@ extension ProgramType {
         case .upperLowerFiveDay:
             "The four-day upper and lower split, plus a short arms and shoulders day for extra volume. Add weight when you hit the top of the rep range."
         case .dumbbellUpperLower:
-            "Upper and lower twice a week with just a pair of dumbbells. Every lower day is the same (split squats, RDLs, calves, abs) and so is every upper day (a press, a row, shoulder press, laterals, curls, triceps), so you can beat last time each session. Prefer lunges? Swap any lift. When you hit the top of the rep range on every set, move up a dumbbell size."
+            "Peter Christian-style upper/lower for a home gym, every muscle twice a week. Monday and Tuesday are PR days, Thursday and Friday are Mastery days with the same exercises. Lower days are all split squats and single-leg work, easy on the knees. Two working sets per exercise, both to true failure (warm-ups don't count): 5–8 reps on pull-ups, presses, rows and all leg work, 12–20 on flies, laterals, curls and triceps; leg work is per leg. PR days: beat last week's weight or reps. Mastery days: match it or go about 5% lighter, with full range and a controlled lowering, still to failure. When both sets reach the top of the range, go up a dumbbell size. Run it at least 12 weeks without swapping exercises. Needs a pull-up bar, a flat bench and adjustable dumbbells."
+        case .dumbbellFullBody:
+            "Peter Christian-style full body for a home gym: three different workouts (Monday A, Wednesday B, Friday C), every muscle twice a week. Most lifts get a PR session early in the week and a Mastery session on Friday; rows, flies and reverse lunges are PR every time. Two working sets per exercise, both to true failure (warm-ups don't count): 5–8 reps on pull-ups, presses, rows and all leg work, 12–20 on flies, laterals, curls and triceps; leg work is per leg. PR days: beat last week's weight or reps. Mastery days: match it or go about 5% lighter, with full range and a controlled lowering, still to failure. When both sets reach the top of the range, go up a dumbbell size. Run it at least 12 weeks without swapping exercises. Needs a pull-up bar, a flat bench and adjustable dumbbells."
         case .hybridUpperLower:
             "Low-volume, high-intensity lifting for runners. Lower on Monday and Friday, upper on Wednesday and Sunday. Pair it with the Hybrid Runs plan in Training › Running for an easy run Tuesday, a tempo run Thursday and a long run Saturday. The same five lifts each lower day and each upper day, every working set to failure: about 4 sets per muscle group (lower: 4 quads, 4 hamstrings, 4 glutes, 3 abs, 3 calves; upper: 4 chest, 4 back, 3 shoulders, 4 arms). Warm up first, then aim for 8+ reps on compounds and 12+ on accessories. When you beat the target, add weight next time."
         }

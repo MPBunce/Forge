@@ -93,12 +93,21 @@ struct UpperLowerTests {
 }
 
 struct DumbbellUpperLowerTests {
-    @Test func sameLowerAndUpperEachTime() {
+    @Test func prThenMasteryWithTheSameLifts() {
         let days = DumbbellUpperLowerProgram().trainingDays
-        #expect(days.map(\.dayName) == ["Upper", "Lower", "Upper", "Lower"])
-        #expect(days[1].day.map(\.name) == days[3].day.map(\.name))
+        #expect(days.map(\.dayName) == ["Mon · Upper · PR", "Tue · Lower · PR", "Thu · Upper · Mastery", "Fri · Lower · Mastery"])
         #expect(days[0].day.map(\.name) == days[2].day.map(\.name))
-        #expect(days[1].day.map(\.name) == ["Dumbbell Split Squat", "Dumbbell RDL", "Dumbbell Calf Raise", "Abs"])
-        #expect(Template.loadTemplates().contains { $0.programType == .dumbbellUpperLower })
+        #expect(days[1].day.map(\.name) == days[3].day.map(\.name))
+        // Two sets, both to failure, on everything.
+        #expect(days.allSatisfy { $0.day.allSatisfy { $0.sets.count == 2 && $0.sets.allSatisfy(\.isAmrap) } })
+        #expect(days[0].day.first?.sets.first?.amrapTargetReps == 5)
+        #expect(days[0].day.last?.sets.first?.amrapTargetReps == 12)
+    }
+
+    @Test func fullBodyIsThreeWorkouts() {
+        let days = DumbbellFullBodyProgram().trainingDays
+        #expect(days.map(\.dayName) == ["Mon · A · PR", "Wed · B · PR", "Fri · C · Mastery"])
+        #expect(days.allSatisfy { $0.day.count == 7 })
+        #expect(Template.loadTemplates().contains { $0.programType == .dumbbellFullBody })
     }
 }

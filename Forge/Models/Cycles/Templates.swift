@@ -89,6 +89,7 @@ enum ProgramType {
     case upperLowerFiveDay
     case hybridUpperLower
     case dumbbellUpperLower
+    case dumbbellFullBody
 
     func createProgram(with settings: UserSettings) -> ProgramProtocol {
         switch self {
@@ -104,6 +105,8 @@ enum ProgramType {
             return HybridUpperLowerProgram()
         case .dumbbellUpperLower:
             return DumbbellUpperLowerProgram()
+        case .dumbbellFullBody:
+            return DumbbellFullBodyProgram()
         case .nSuns4Days:
             return nSunsFourDayProgram(benchTM: settings.bench, squatTM: settings.squat, deadliftTM: settings.deadlift, ohpTM: settings.press)
         case .nSuns5Days:
@@ -223,9 +226,16 @@ extension Template {
             Template(
                 id: "dumbbell_upper_lower",
                 name: "Dumbbell Upper Lower",
-                description: "Upper and lower with just a pair of dumbbells",
+                description: "Home gym upper/lower: PR and Mastery days",
                 duration: "4 days",
                 programType: .dumbbellUpperLower
+            ),
+            Template(
+                id: "dumbbell_full_body",
+                name: "Dumbbell Full Body",
+                description: "Home gym full body: three workouts, PR and Mastery",
+                duration: "6 days",
+                programType: .dumbbellFullBody
             ),
             Template(
                 id: "hybrid_upper_lower",
