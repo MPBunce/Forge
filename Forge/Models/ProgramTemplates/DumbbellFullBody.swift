@@ -30,21 +30,23 @@ final class DumbbellFullBodyProgram: ProgramProtocol {
     }
 
     init() {
-        // Upper body first while you're fresh, then legs, then abs.
+        // Upper body first while you're fresh, then legs, then abs. Monday and Friday are
+        // a push, a pull, triceps then biceps; Wednesday is dips, pull-ups and laterals
+        // with four lower-body lifts. A lift's second time in the week is its Mastery day.
         trainingDays = [
             Self.day(0, "Mon · A · PR", [
                 ("Dumbbell Bench Press", 5),
                 ("Pull-up", 5),
-                ("Dumbbell Lateral Raise", 12),
+                ("Overhead Dumbbell Triceps Extension", 12),
                 ("Dumbbell Curl", 12),
                 ("Bulgarian Split Squat", 5),
                 ("Single-Leg Dumbbell Calf Raise", 6),
                 ("Hanging Leg Raise", 8),
             ]),
             Self.day(1, "Wed · B · PR", [
-                ("One-Arm Dumbbell Row", 5),
-                ("Dumbbell Fly", 12),
-                ("Overhead Dumbbell Triceps Extension", 12),
+                ("Dips", 5),
+                ("Pull-up (Mastery)", 5),
+                ("Dumbbell Lateral Raise", 12),
                 ("Single-Leg Dumbbell RDL", 5),
                 ("Dumbbell Reverse Lunge", 6),
                 ("Single-Leg Dumbbell Calf Raise (Mastery)", 6),
@@ -52,10 +54,9 @@ final class DumbbellFullBodyProgram: ProgramProtocol {
             ]),
             Self.day(2, "Fri · C · Mastery", [
                 ("Dumbbell Bench Press", 5),
-                ("Pull-up", 5),
-                ("Dumbbell Lateral Raise", 12),
-                ("Dumbbell Curl", 12),
+                ("One-Arm Dumbbell Row (PR)", 5),
                 ("Overhead Dumbbell Triceps Extension", 12),
+                ("Dumbbell Curl", 12),
                 ("Bulgarian Split Squat", 5),
                 ("Single-Leg Dumbbell RDL", 5),
             ]),

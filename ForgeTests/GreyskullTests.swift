@@ -107,7 +107,8 @@ struct DumbbellUpperLowerTests {
     @Test func fullBodyIsThreeWorkouts() {
         let days = DumbbellFullBodyProgram().trainingDays
         #expect(days.map(\.dayName) == ["Mon · A · PR", "Wed · B · PR", "Fri · C · Mastery"])
-        #expect(days.allSatisfy { $0.day.count == 7 })
+        #expect(days.map { $0.day.count } == [7, 7, 6])
+        #expect(days[1].day.prefix(3).map(\.name) == ["Dips", "Pull-up (Mastery)", "Dumbbell Lateral Raise"])
         #expect(Template.loadTemplates().contains { $0.programType == .dumbbellFullBody })
     }
 }
