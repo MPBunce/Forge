@@ -30,33 +30,34 @@ final class DumbbellFullBodyProgram: ProgramProtocol {
     }
 
     init() {
+        // Upper body first while you're fresh, then legs, then abs.
         trainingDays = [
             Self.day(0, "Mon · A · PR", [
-                ("Bulgarian Split Squat", 5),
-                ("Single-Leg Dumbbell Calf Raise", 6),
                 ("Dumbbell Bench Press", 5),
                 ("Pull-up", 5),
                 ("Dumbbell Lateral Raise", 12),
                 ("Dumbbell Curl", 12),
+                ("Bulgarian Split Squat", 5),
+                ("Single-Leg Dumbbell Calf Raise", 6),
                 ("Hanging Leg Raise", 8),
             ]),
             Self.day(1, "Wed · B · PR", [
-                ("Single-Leg Dumbbell RDL", 5),
-                ("Dumbbell Reverse Lunge", 6),
-                ("Single-Leg Dumbbell Calf Raise (Mastery)", 6),
                 ("One-Arm Dumbbell Row", 5),
                 ("Dumbbell Fly", 12),
                 ("Overhead Dumbbell Triceps Extension", 12),
+                ("Single-Leg Dumbbell RDL", 5),
+                ("Dumbbell Reverse Lunge", 6),
+                ("Single-Leg Dumbbell Calf Raise (Mastery)", 6),
                 ("Hanging Leg Raise (Mastery)", 8),
             ]),
             Self.day(2, "Fri · C · Mastery", [
-                ("Bulgarian Split Squat", 5),
-                ("Single-Leg Dumbbell RDL", 5),
                 ("Dumbbell Bench Press", 5),
                 ("Pull-up", 5),
                 ("Dumbbell Lateral Raise", 12),
                 ("Dumbbell Curl", 12),
                 ("Overhead Dumbbell Triceps Extension", 12),
+                ("Bulgarian Split Squat", 5),
+                ("Single-Leg Dumbbell RDL", 5),
             ]),
         ]
     }
