@@ -429,6 +429,7 @@ private struct SetEditor: View {
     @Environment(\.weightUnit) private var unit
     @Environment(\.weightStep) private var step
     @Environment(\.weightStart) private var start
+    @Environment(\.lastWeight) private var lastWeight
     @Environment(\.barWeight) private var bar
     @Environment(\.smallestPlate) private var smallestPlate
     @AppStorage(PreferenceKeys.showPlates) private var showPlates = true
@@ -504,6 +505,8 @@ private struct SetEditor: View {
         .presentationDetents([.height(targetReps == nil ? 340 : 380), .large])
         .presentationDragIndicator(.visible)
         .onAppear {
+            // A set with no weight yet starts on the weight last used for this lift.
+            if weight == nil, weightEditable, let lastWeight { weight = lastWeight }
             weightText = weight.map { WeightConverter.format($0) } ?? ""
             repsText = reps.map(String.init) ?? ""
         }

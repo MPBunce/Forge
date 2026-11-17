@@ -20,10 +20,12 @@ struct ProgramStartView: View {
     @Environment(\.modelContext) private var context
     private var plus = ForgePlus.shared
 
-    init(template: Template, settings: UserSettings, onStart: @escaping ([String: String]) -> Void) {
+    init(template: Template, settings: UserSettings, previousSwaps: [String: String] = [:],
+         onStart: @escaping ([String: String]) -> Void) {
         self.template = template
         self.settings = settings
         self.onStart = onStart
+        _swaps = State(initialValue: previousSwaps)
     }
 
     /// The program's lifts, in the order they first appear.

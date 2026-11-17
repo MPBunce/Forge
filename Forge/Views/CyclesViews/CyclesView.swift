@@ -176,7 +176,11 @@ struct CycleSelectionSheet: View {
                 TemplateEditorView(template: template)
             }
             .navigationDestination(item: $startingTemplate) { template in
-                ProgramStartView(template: template, settings: UserSettings(from: userSettings)) { swaps in
+                ProgramStartView(template: template, settings: UserSettings(from: userSettings),
+                                 previousSwaps: ExerciseSwaps.lastUsed(
+                                    for: template,
+                                    in: (try? context.fetch(FetchDescriptor<Cycles>())) ?? [],
+                                    settings: UserSettings(from: userSettings))) { swaps in
                     context.insert(template.createCycle(with: UserSettings(from: userSettings), swaps: swaps))
                     dismiss()
                 }

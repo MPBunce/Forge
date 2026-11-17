@@ -30,6 +30,7 @@ struct NextCycleSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query private var settings: [Settings]
+    @Query private var cycles: [Cycles]
 
     let template: Template
     var onStart: () -> Void = {}
@@ -78,8 +79,19 @@ struct NextCycleSheet: View {
                     }
                 } else {
                     Section {
-                        Text("Start a fresh copy of \(template.name). Your weights from this cycle show as \"Last time\" on each exercise.")
+                        Text("Start a fresh copy of \(template.name). Each exercise starts from the weight you used last.")
                             .foregroundStyle(.secondary)
+                    }
+                }
+                if !carriedSwaps.isEmpty {
+                    Section {
+                        ForEach(carriedSwaps.sorted(by: { $0.key < $1.key }), id: \.key) { was, now in
+                            LabeledContent(now) {
+                                Text("instead of \(was)").foregroundStyle(.secondary)
+                            }
+                        }
+                    } header: {
+                        Text("Your swaps carry over")
                     }
                 }
             }
@@ -121,6 +133,11 @@ struct NextCycleSheet: View {
         }
     }
 
+    private var carriedSwaps: [String: String] {
+        guard let s = userSettings else { return [:] }
+        return ExerciseSwaps.lastUsed(for: template, in: cycles, settings: UserSettings(from: s))
+    }
+
     private func start() {
         let s = userSettings ?? {
             let new = Settings.defaultSettings
@@ -134,7 +151,9 @@ struct NextCycleSheet: View {
             s.deadliftMax = toLbs(maxes[.deadlift] ?? 0)
             s.overheadPressMax = toLbs(maxes[.press] ?? 0)
         }
-        context.insert(template.createCycle(with: UserSettings(from: s)))
+        // Swaps come from the cycle as it stood, before the maxes above changed.
+        let swaps = carriedSwaps
+        context.insert(template.createCycle(with: UserSettings(from: s), swaps: swaps))
         try? context.save()
         onStart()
         dismiss()

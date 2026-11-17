@@ -33,6 +33,8 @@ struct ExerciseDetailView: View {
     @State private var showingAddSetSheet = false
     @State private var editingSet: ExerciseSet? = nil
     @State private var lastTime: LastSession? = nil
+    /// The weight last logged for this lift, anywhere.
+    @State private var lastWeight: Double?
     /// The best this lift had been before today's sets, to spot a new PB.
     @State private var previousBest: PersonalBests.Best?
 
@@ -83,10 +85,17 @@ struct ExerciseDetailView: View {
         .environment(\.weightUnit, cycle.weightUnit)
         .environment(\.weightStep, weightStep)
         .environment(\.weightStart, weightStart)
+        .environment(\.lastWeight, currentLastWeight)
         .environment(\.restSeconds, restSeconds)
         .environment(\.barWeight, bar)
         .environment(\.smallestPlate, smallestPlate)
         .safeAreaInset(edge: .bottom) { RestTimerBar() }
+    }
+
+    /// The last weight logged for this lift: earlier in today's sets, or in an earlier session.
+    private var currentLastWeight: Double? {
+        let doneToday = (exercise?.orderedSets ?? []).filter { $0.completionStatus != .notStarted }
+        return doneToday.compactMap(\.weight).last ?? lastWeight
     }
 
     /// The set in this session that beats the lift's previous best, if one does.
@@ -109,8 +118,9 @@ struct ExerciseDetailView: View {
             let all = (try? context.fetch(FetchDescriptor<Cycles>())) ?? []
             previousBest = PersonalBests.best(for: exercise.name, in: all,
                                               excluding: Set(exercise.sets.map(\.persistentModelID)))
+            lastWeight = LastWeight.find(for: exercise, in: all, usesKilograms: cycle.usesKilograms)
         }
-        weightStart = exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
+        weightStart = currentLastWeight ?? exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
     }
 
     /// The most recent earlier time this exercise was logged: earlier days in this cycle,

@@ -38,6 +38,37 @@ enum ExerciseSwaps {
         }
     }
 
+    /// The swaps made in a cycle, worked out by comparing it with a fresh copy of its
+    /// program slot by slot. Keyed by the program's name for each lift, like `apply` takes.
+    /// When a lift was swapped part-way through, the latest day's choice wins.
+    static func made(in cycle: Cycles, template: Template, settings: UserSettings) -> [String: String] {
+        let fresh = template.programType.createProgram(with: settings).generateDays(with: settings)
+        var swaps: [String: String] = [:]
+        for day in cycle.trainingDays.sorted(by: { $0.dayIndex < $1.dayIndex }) {
+            guard let original = fresh.first(where: { $0.dayIndex == day.dayIndex }) else { continue }
+            for exercise in day.day {
+                guard let slot = original.day.first(where: { $0.exerciseIndex == exercise.exerciseIndex }) else { continue }
+                let was = split(slot.name).base
+                let now = split(exercise.name).base
+                if was != now {
+                    swaps[was] = now
+                } else if swaps[was] != nil {
+                    // Swapped back later in the cycle.
+                    swaps[was] = nil
+                }
+            }
+        }
+        return swaps
+    }
+
+    /// The swaps from the most recent cycle of this program, to start the next one the same way.
+    static func lastUsed(for template: Template, in cycles: [Cycles], settings: UserSettings) -> [String: String] {
+        guard let latest = cycles
+            .filter({ $0.template == template.name })
+            .max(by: { $0.startDate < $1.startDate }) else { return [:] }
+        return made(in: latest, template: template, settings: settings)
+    }
+
     /// Common variations for a lift, matched on the words in its name.
     static func alternatives(for lift: String) -> [String] {
         let name = lift.lowercased()

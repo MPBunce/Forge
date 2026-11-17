@@ -15,6 +15,8 @@ extension EnvironmentValues {
     @Entry var weightStep: Double = 5
     /// Where + starts from when a set has no weight yet (the last weight used, or the bar).
     @Entry var weightStart: Double = 45
+    /// The weight last logged for this lift; a set with no weight opens the editor on it.
+    @Entry var lastWeight: Double? = nil
     /// Forge Plus: rest between sets, in seconds.
     @Entry var restSeconds: Int = 120
     /// The empty bar and smallest plate, in the weights' unit, for the plate calculator.
