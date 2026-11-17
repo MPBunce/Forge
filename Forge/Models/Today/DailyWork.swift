@@ -19,6 +19,26 @@ enum DailyWorkMethod: String, Codable, CaseIterable, Identifiable {
 
     var id: Self { self }
 
+    /// The reps to show after switching from `old` to this method, keeping roughly the same
+    /// day's total: 50 total reps becomes 5 × 10 as sets, or a ladder to 10 (55 reps).
+    func reps(keepingTotalOf old: DailyWorkMethod, reps: Int, setCount: Int) -> Int {
+        let total: Int = switch old {
+        case .totalReps: reps
+        case .ladder: reps * (reps + 1) / 2
+        case .sets: reps * setCount
+        }
+        switch self {
+        case .totalReps:
+            return max(1, total)
+        case .sets:
+            return max(1, Int((Double(total) / Double(max(1, setCount))).rounded()))
+        case .ladder:
+            // The top rung whose ladder (1 + 2 + … + n) comes closest to the total.
+            let top = ((8 * Double(total) + 1).squareRoot() - 1) / 2
+            return max(1, Int(top.rounded()))
+        }
+    }
+
     var title: String {
         switch self {
         case .totalReps: return "Total reps"

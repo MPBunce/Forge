@@ -79,3 +79,15 @@ struct CarryOverTests {
         #expect(LastWeight.find(for: today, in: [older, newer], usesKilograms: true) == nil)
     }
 }
+
+struct DailyWorkSwitchTests {
+    @Test func switchingKeepsTheDaysTotal() {
+        // 50 reps across the day → 5 sets of 10.
+        #expect(DailyWorkMethod.sets.reps(keepingTotalOf: .totalReps, reps: 50, setCount: 5) == 10)
+        // And back again.
+        #expect(DailyWorkMethod.totalReps.reps(keepingTotalOf: .sets, reps: 10, setCount: 5) == 50)
+        // 55 reps as a ladder is 1 to 10.
+        #expect(DailyWorkMethod.ladder.reps(keepingTotalOf: .totalReps, reps: 55, setCount: 5) == 10)
+        #expect(DailyWorkMethod.totalReps.reps(keepingTotalOf: .ladder, reps: 10, setCount: 5) == 55)
+    }
+}

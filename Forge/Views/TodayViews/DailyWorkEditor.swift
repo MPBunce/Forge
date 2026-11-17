@@ -122,7 +122,11 @@ struct DailyWorkItemForm: View {
         Form {
             Section {
                 TextField("Exercise name", text: $name)
-                Picker("Method", selection: $method) {
+                Picker("Method", selection: Binding(get: { method }, set: { new in
+                    // Keep the day's total when switching, so 50 reps becomes 5 × 10, not 5 × 50.
+                    reps = new.reps(keepingTotalOf: method, reps: reps, setCount: setCount)
+                    method = new
+                })) {
                     ForEach(DailyWorkMethod.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
