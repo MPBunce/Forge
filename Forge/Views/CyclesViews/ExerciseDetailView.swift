@@ -86,11 +86,14 @@ struct ExerciseDetailView: View {
         .environment(\.weightStep, weightStep)
         .environment(\.weightStart, weightStart)
         .environment(\.lastWeight, currentLastWeight)
+        .environment(\.isBodyweight, isBodyweight)
         .environment(\.restSeconds, restSeconds)
         .environment(\.barWeight, bar)
         .environment(\.smallestPlate, smallestPlate)
         .safeAreaInset(edge: .bottom) { RestTimerBar() }
     }
+
+    private var isBodyweight: Bool { Bodyweight.isBodyweight(exercise?.name ?? "") }
 
     /// The last weight logged for this lift: earlier in today's sets, or in an earlier session.
     private var currentLastWeight: Double? {
@@ -120,7 +123,9 @@ struct ExerciseDetailView: View {
                                               excluding: Set(exercise.sets.map(\.persistentModelID)))
             lastWeight = LastWeight.find(for: exercise, in: all, usesKilograms: cycle.usesKilograms)
         }
-        weightStart = currentLastWeight ?? exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight ?? bar
+        // Bodyweight lifts start at no added weight, not an empty bar.
+        weightStart = currentLastWeight ?? exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight
+            ?? (isBodyweight ? 0 : bar)
     }
 
     /// The most recent earlier time this exercise was logged: earlier days in this cycle,

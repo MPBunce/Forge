@@ -91,3 +91,36 @@ struct DailyWorkSwitchTests {
         #expect(DailyWorkMethod.totalReps.reps(keepingTotalOf: .ladder, reps: 10, setCount: 5) == 55)
     }
 }
+
+struct BodyweightTests {
+    @Test func recognisesBodyweightLifts() {
+        for name in ["Pull-up", "Pull-ups", "Chin-ups/Pull-ups", "Dips", "Push-ups", "Hanging Leg Raise", "Weighted Pull-up (Mastery)"] {
+            #expect(Bodyweight.isBodyweight(name), "\(name)")
+        }
+        for name in ["Lat Pulldown", "Bench Press", "Dumbbell Fly", "One-Arm Dumbbell Row"] {
+            #expect(!Bodyweight.isBodyweight(name), "\(name)")
+        }
+    }
+
+    @Test func labelsAddedWeight() {
+        #expect(Bodyweight.label(added: nil) == "BW")
+        #expect(Bodyweight.label(added: 0) == "BW")
+        #expect(Bodyweight.label(added: 25) == "BW+25")
+    }
+
+    @MainActor @Test func moreRepsAtBodyweightIsAPB() throws {
+        let container = try ModelContainer(for: Cycles.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = container.mainContext
+        let old = ExerciseSet(setIndex: 0, weight: 0, reps: 6, completionStatus: .completedSuccessfully)
+        let new = ExerciseSet(setIndex: 0, weight: 0, reps: 8, completionStatus: .completedSuccessfully)
+        let day = TrainingDay(dayIndex: 0, dayName: "Upper", day: [Exercise(exerciseIndex: 0, name: "Pull-up", sets: [old])])
+        let today = Exercise(exerciseIndex: 1, name: "Pull-up", sets: [new])
+        let cycle = Cycles(startDate: .now, template: "Test", usesKilograms: false, trainingDays: [day])
+        context.insert(cycle)
+        context.insert(today)
+        try context.save()
+        let previous = try #require(PersonalBests.best(for: "Pull-up", in: [cycle]))
+        #expect(previous.reps == 6)
+        #expect(PersonalBests.newBest(among: [new], usesKilograms: false, previous: previous) === new)
+    }
+}

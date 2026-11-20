@@ -269,7 +269,10 @@ struct CyclesDetailView: View {
     // MARK: - Helper Methods
     private static func setSummary(_ set: ExerciseSet, unit: String) -> String {
         let reps = set.reps.map { "\($0)\(set.isAmrap ? "+" : "") reps" }
-        let weight = set.weight.map { "\(WeightConverter.format($0)) \(unit)" }
+        let isBodyweight = Bodyweight.isBodyweight(set.exercise?.name ?? "")
+        let weight: String? = isBodyweight
+            ? set.weight.flatMap { $0 > 0 ? "BW+\(WeightConverter.format($0)) \(unit)" : nil }
+            : set.weight.map { "\(WeightConverter.format($0)) \(unit)" }
         switch (reps, weight) {
         case let (r?, w?): return "\(r) @ \(w)"
         case let (r?, nil): return r

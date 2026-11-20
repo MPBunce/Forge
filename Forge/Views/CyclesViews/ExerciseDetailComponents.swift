@@ -352,13 +352,14 @@ struct SetStatusButton: View {
 // MARK: - Set Display Values Component
 struct SetDisplayValues: View {
     let set: ExerciseSet
+    @Environment(\.isBodyweight) private var isBodyweight
     
     var body: some View {
         HStack(spacing: 8) {
             HStack(spacing: 4) {
-                Text(set.weight.map { WeightConverter.format($0) } ?? "—")
+                Text(isBodyweight ? Bodyweight.label(added: set.weight) : set.weight.map { WeightConverter.format($0) } ?? "—")
                     .fontWeight(.medium)
-                    .foregroundColor(set.weight != nil ? .primary : .secondary)
+                    .foregroundColor(set.weight != nil || isBodyweight ? .primary : .secondary)
                 
                 Text("×")
                     .foregroundColor(.secondary)
@@ -430,6 +431,7 @@ private struct SetEditor: View {
     @Environment(\.weightStep) private var step
     @Environment(\.weightStart) private var start
     @Environment(\.lastWeight) private var lastWeight
+    @Environment(\.isBodyweight) private var isBodyweight
     @Environment(\.barWeight) private var bar
     @Environment(\.smallestPlate) private var smallestPlate
     @AppStorage(PreferenceKeys.showPlates) private var showPlates = true
@@ -460,10 +462,16 @@ private struct SetEditor: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-                stepperRow(label: "Weight (\(unit))", text: $weightText, field: .weight, editable: weightEditable,
-                           keyboard: .decimalPad,
+                stepperRow(label: isBodyweight ? "Added weight (\(unit))" : "Weight (\(unit))",
+                           text: $weightText, field: .weight, editable: weightEditable,
+                           keyboard: .decimalPad, placeholder: isBodyweight ? "BW" : "—",
                            minus: { adjustWeight(-step) }, plus: { adjustWeight(step) })
-                if plus.isActive, weightEditable {
+                if isBodyweight, weightEditable {
+                    Text(weightText.isEmpty ? "Bodyweight. Tap + to add weight with a belt or dumbbell."
+                                            : "Bodyweight plus \(weightText) \(unit).")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else if plus.isActive, weightEditable {
                     platesRow
                 }
                 stepperRow(label: repsLabel, text: $repsText, field: .reps, editable: repsEditable,
@@ -507,6 +515,8 @@ private struct SetEditor: View {
         .onAppear {
             // A set with no weight yet starts on the weight last used for this lift.
             if weight == nil, weightEditable, let lastWeight { weight = lastWeight }
+            // Bodyweight with nothing added shows as "BW" (the empty field), not 0.
+            if isBodyweight, weight == 0 { weight = nil }
             weightText = weight.map { WeightConverter.format($0) } ?? ""
             repsText = reps.map(String.init) ?? ""
         }
@@ -545,18 +555,25 @@ private struct SetEditor: View {
     }
 
     private func save() {
-        onSave(Double(weightText), Int(repsText))
+        // A bodyweight set with nothing added saves as 0: done, at bodyweight.
+        let weight = Double(weightText) ?? (isBodyweight && weightEditable ? 0 : nil)
+        onSave(weight, Int(repsText))
         if onCancel == nil { dismiss() }
     }
 
     private func adjustWeight(_ delta: Double) {
         // A blank weight jumps straight to a sensible starting point instead of 0.
         guard let current = Double(weightText) else {
+            // Bodyweight: + adds the first step; − stays at bodyweight.
+            if isBodyweight {
+                if delta > 0 { weightText = WeightConverter.format(step) }
+                return
+            }
             weightText = WeightConverter.format(start)
             return
         }
         let next = max(0, ((current + delta) * 100).rounded() / 100)
-        weightText = WeightConverter.format(next)
+        weightText = isBodyweight && next == 0 ? "" : WeightConverter.format(next)
     }
 
     private func adjustReps(_ delta: Int) {
@@ -564,14 +581,15 @@ private struct SetEditor: View {
     }
 
     private func stepperRow(label: String, text: Binding<String>, field: Field, editable: Bool,
-                            keyboard: UIKeyboardType, minus: @escaping () -> Void, plus: @escaping () -> Void) -> some View {
+                            keyboard: UIKeyboardType, placeholder: String = "—",
+                            minus: @escaping () -> Void, plus: @escaping () -> Void) -> some View {
         VStack(spacing: 6) {
             Text(label)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             HStack(spacing: 16) {
                 roundButton("minus", action: minus).disabled(!editable)
-                TextField("—", text: text)
+                TextField(placeholder, text: text)
                     .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
                     .multilineTextAlignment(.center)
                     .keyboardType(keyboard)

@@ -17,6 +17,8 @@ extension EnvironmentValues {
     @Entry var weightStart: Double = 45
     /// The weight last logged for this lift; a set with no weight opens the editor on it.
     @Entry var lastWeight: Double? = nil
+    /// A bodyweight lift (pull-ups, dips): weights are added on top and shown as "BW+".
+    @Entry var isBodyweight: Bool = false
     /// Forge Plus: rest between sets, in seconds.
     @Entry var restSeconds: Int = 120
     /// The empty bar and smallest plate, in the weights' unit, for the plate calculator.
