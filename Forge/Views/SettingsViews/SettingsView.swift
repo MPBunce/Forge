@@ -398,7 +398,11 @@ private struct ExportSection: View {
                 Button {
                     showingPlus = true
                 } label: {
-                    Label("Export workouts (CSV)", systemImage: "square.and.arrow.up")
+                    HStack {
+                        Label("Export workouts (CSV)", systemImage: "square.and.arrow.up")
+                        Spacer()
+                        PlusBadge()
+                    }
                 }
                 // On the row: a sheet on a List section doesn't present.
                 .sheet(isPresented: $showingPlus) {

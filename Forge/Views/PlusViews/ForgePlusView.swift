@@ -21,7 +21,7 @@ struct ForgePlusView: View {
                         .font(.system(size: 30, weight: .light))
                     Text("Forge Plus")
                         .font(.largeTitle.weight(.light))
-                    Text("Build your own programs: strength templates and running plans made the way you train.")
+                    Text("Build your own programs: strength templates and running plans made the way you train. Plus notes on each lift, warm-up sets, and exporting your workouts.")
                         .foregroundStyle(.secondary)
                     if plus.isActive {
                         Text("Unlocked")
