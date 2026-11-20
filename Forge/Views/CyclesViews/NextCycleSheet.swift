@@ -61,7 +61,7 @@ enum TrainingMaxSuggestion {
             return Suggestion(increase: large, reason: "No + sets logged, so the standard increase")
         }
         let at = top.weight.map { " at \(WeightConverter.format($0))" } ?? ""
-        let done = "\(reps) on the \(target)+ set\(at)"
+        let done = "\(reps) reps on the \(target)+ set\(at)"
         switch program {
         case .nSuns4Days, .nSuns5Days, .nSuns6DaysSquat, .nSuns6DaysDeadlift:
             if reps <= 1 { return Suggestion(increase: 0, reason: "\(done): hold") }
