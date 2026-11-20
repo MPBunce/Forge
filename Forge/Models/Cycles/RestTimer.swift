@@ -6,6 +6,7 @@
 //  Forge is in the background.
 //
 
+import ActivityKit
 import Foundation
 import Observation
 import UserNotifications
@@ -34,7 +35,13 @@ final class RestTimer {
     private let notificationID = "forge.restTimer"
     private var finishTask: Task<Void, Never>?
 
-    private init() {}
+    private var activity: Activity<RestActivityAttributes>?
+
+    private init() {
+        // The Live Activity's +30s and Skip buttons run here.
+        RestTimerBridge.add = { [weak self] seconds in self?.add(seconds) }
+        RestTimerBridge.skip = { [weak self] in self?.stop() }
+    }
 
     var isRunning: Bool { endDate.map { $0 > .now } ?? false }
 
@@ -65,11 +72,13 @@ final class RestTimer {
     func stop() {
         endDate = nil
         finishTask?.cancel()
+        endActivity()
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notificationID])
     }
 
     private func reschedule() {
         guard let end = endDate else { return }
+        showActivity(until: end)
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [notificationID])
 
@@ -78,6 +87,7 @@ final class RestTimer {
             try? await Task.sleep(for: .seconds(max(0, end.timeIntervalSinceNow)))
             guard !Task.isCancelled else { return }
             self?.endDate = nil
+            self?.endActivity()
         }
 
         let id = notificationID
@@ -91,5 +101,25 @@ final class RestTimer {
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, end.timeIntervalSinceNow), repeats: false)
             try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
         }
+    }
+
+    // MARK: Live Activity
+
+    /// Shows or updates the countdown on the Lock Screen and in the Dynamic Island.
+    private func showActivity(until end: Date) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let state = RestActivityAttributes.ContentState(startDate: end.addingTimeInterval(-total), endDate: end)
+        let content = ActivityContent(state: state, staleDate: end)
+        if let activity {
+            Task { await activity.update(content) }
+        } else {
+            activity = try? Activity.request(attributes: RestActivityAttributes(), content: content)
+        }
+    }
+
+    private func endActivity() {
+        guard let activity else { return }
+        self.activity = nil
+        Task { await activity.end(nil, dismissalPolicy: .immediate) }
     }
 }

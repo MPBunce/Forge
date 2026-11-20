@@ -19,6 +19,8 @@ extension EnvironmentValues {
     @Entry var lastWeight: Double? = nil
     /// A bodyweight lift (pull-ups, dips): weights are added on top and shown as "BW+".
     @Entry var isBodyweight: Bool = false
+    /// Double progression: AMRAP targets show as a rep range ("5–8").
+    @Entry var showsRepRanges: Bool = false
     /// Forge Plus: rest between sets, in seconds.
     @Entry var restSeconds: Int = 120
     /// The empty bar and smallest plate, in the weights' unit, for the plate calculator.

@@ -353,6 +353,7 @@ struct SetStatusButton: View {
 struct SetDisplayValues: View {
     let set: ExerciseSet
     @Environment(\.isBodyweight) private var isBodyweight
+    @Environment(\.showsRepRanges) private var showsRepRanges
     
     var body: some View {
         HStack(spacing: 8) {
@@ -374,7 +375,7 @@ struct SetDisplayValues: View {
             .fixedSize()
 
             if set.isAmrap {
-                Text(set.amrapTargetReps.map { "AMRAP \($0)+" } ?? "AMRAP")
+                Text(set.amrapTargetReps.map { showsRepRanges ? Progression.rangeText(forTarget: $0) : "AMRAP \($0)+" } ?? "AMRAP")
                     .font(.caption2)
                     .fontWeight(.medium)
                     .lineLimit(1)

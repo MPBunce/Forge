@@ -59,6 +59,7 @@ struct CyclesDetailView: View {
             }
         }
         .environment(\.weightUnit, cycle?.weightUnit ?? "lbs")
+        .environment(\.showsRepRanges, cycle.map(Progression.usesRepRanges) ?? false)
         .navigationTitle(cycle?.template ?? "Cycle Detail")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $showingPlus) { ForgePlusView() }
@@ -197,6 +198,7 @@ struct CyclesDetailView: View {
     struct ExerciseRowView: View {
         let exercise: Exercise
         @Environment(\.weightUnit) private var unit
+        @Environment(\.showsRepRanges) private var showsRepRanges
         
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
@@ -238,7 +240,7 @@ struct CyclesDetailView: View {
                                     .foregroundColor(.secondary)
                                     .frame(width: 40, alignment: .leading)
                                 
-                                Text(CyclesDetailView.setSummary(set, unit: unit))
+                                Text(CyclesDetailView.setSummary(set, unit: unit, ranges: showsRepRanges))
                                     .font(.caption)
                                     .monospacedDigit()
                                     .foregroundColor(set.reps == nil && set.weight == nil ? .secondary : .primary)
@@ -267,8 +269,10 @@ struct CyclesDetailView: View {
     }
 
     // MARK: - Helper Methods
-    private static func setSummary(_ set: ExerciseSet, unit: String) -> String {
-        let reps = set.reps.map { "\($0)\(set.isAmrap ? "+" : "") reps" }
+    private static func setSummary(_ set: ExerciseSet, unit: String, ranges: Bool) -> String {
+        let reps: String? = ranges && set.isAmrap && set.amrapTargetReps != nil
+            ? "\(Progression.rangeText(forTarget: set.amrapTargetReps ?? 0)) reps"
+            : set.reps.map { "\($0)\(set.isAmrap ? "+" : "") reps" }
         let isBodyweight = Bodyweight.isBodyweight(set.exercise?.name ?? "")
         let weight: String? = isBodyweight
             ? set.weight.flatMap { $0 > 0 ? "BW+\(WeightConverter.format($0)) \(unit)" : nil }

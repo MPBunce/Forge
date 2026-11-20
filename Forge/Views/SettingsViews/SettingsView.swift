@@ -258,6 +258,8 @@ struct SettingsView: View {
                 } footer: {
                     Text("Used to calculate weights when you start a 5/3/1 or nSuns cycle. Changes apply to new cycles only.")
                 }
+
+                ExportSection()
             }
             .navigationTitle("Settings")
             .onAppear { RestTimer.migrateDefault(settings.first) }
@@ -381,4 +383,45 @@ struct TrainingMaxRow: View {
 #Preview {
     SettingsView()
         .modelContainer(for: Settings.self, inMemory: true)
+}
+
+/// Forge Plus: every logged set as a CSV file.
+private struct ExportSection: View {
+    @Query private var cycles: [Cycles]
+    @State private var file: URL?
+    @State private var showingPlus = false
+    private var plus = ForgePlus.shared
+
+    var body: some View {
+        Section {
+            if !plus.isActive {
+                Button {
+                    showingPlus = true
+                } label: {
+                    Label("Export workouts (CSV)", systemImage: "square.and.arrow.up")
+                }
+                // On the row: a sheet on a List section doesn't present.
+                .sheet(isPresented: $showingPlus) {
+                    NavigationStack { ForgePlusView() }
+                }
+            } else if let file {
+                ShareLink(item: file) {
+                    Label("Export workouts (CSV)", systemImage: "square.and.arrow.up")
+                }
+            } else {
+                Label("Preparing export…", systemImage: "square.and.arrow.up")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Your Data")
+        } footer: {
+            Text(plus.isActive
+                 ? "Every set you've logged, with dates, weights, and reps. Opens in Numbers, Excel, or Google Sheets. Your workouts stay on this iPhone, so this is also a backup."
+                 : "Export every set you've logged as a spreadsheet with Forge Plus.")
+        }
+        .task(id: cycles.count) {
+            guard plus.isActive else { return }
+            file = try? WorkoutExport.file(cycles)
+        }
+    }
 }

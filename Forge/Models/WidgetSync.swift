@@ -34,6 +34,12 @@ private struct WidgetSyncModifier: ViewModifier {
                 await loadSteps()
                 save()
             }
+            // Mark Done anywhere updates the Next Workout widget straight away.
+            .onChange(of: nextWorkout) { _, workout in
+                if NextWorkoutSnapshot.save(workout) {
+                    WidgetCenter.shared.reloadTimelines(ofKind: "ForgeNextWorkout")
+                }
+            }
             .onChange(of: scenePhase) { _, phase in
                 switch phase {
                 case .background, .inactive:
@@ -58,7 +64,27 @@ private struct WidgetSyncModifier: ViewModifier {
         stepsByDay = await stepCounter.dailySteps(from: start, to: end)
     }
 
+    /// The next lifting day of the newest unfinished cycle (or the one finished today).
+    private var nextWorkout: NextWorkoutSnapshot? {
+        let calendar = Calendar.current
+        let sorted = cycles.sorted { $0.startDate > $1.startDate }
+        func doneToday(_ cycle: Cycles) -> Bool {
+            cycle.trainingDays.contains { $0.completedDate.map(calendar.isDateInToday) ?? false }
+        }
+        guard let cycle = sorted.first(where: { !$0.isCompleted || doneToday($0) }) else { return nil }
+        guard let day = cycle.nextDay else {
+            // Finished today: nothing left in this cycle.
+            return NextWorkoutSnapshot(program: cycle.template, dayName: "Cycle complete", exercises: [], doneToday: true)
+        }
+        return NextWorkoutSnapshot(program: cycle.template, dayName: day.dayName,
+                                   exercises: day.day.sorted { $0.exerciseIndex < $1.exerciseIndex }.map(\.name),
+                                   doneToday: doneToday(cycle))
+    }
+
     private func save() {
+        if NextWorkoutSnapshot.save(nextWorkout) {
+            WidgetCenter.shared.reloadTimelines(ofKind: "ForgeNextWorkout")
+        }
         let records = ActivityRecords(cycles: cycles, runPlans: runPlans, races: races, singleRuns: singleRuns,
                                       dailyItems: dailyItems, dailyEntries: dailyEntries,
                                       stretchEntries: stretchEntries, stepsByDay: stepsByDay,

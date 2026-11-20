@@ -14,5 +14,7 @@ struct ForgeWidgetBundle: WidgetBundle {
         StepsStreakWidget()
         DailyWorkStreakWidget()
         StretchingStreakWidget()
+        NextWorkoutWidget()
+        RestLiveActivity()
     }
 }

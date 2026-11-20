@@ -39,6 +39,11 @@ struct ContentView: View {
         }
         .syncsActivityWidgets()
         .onOpenURL { url in
+            // The Next Workout widget.
+            if url.scheme == "forge", url.host == "training" {
+                selectedTab = 1
+                return
+            }
             guard let metric = ActivityMetric(url: url) else { return }
             selectedTab = 2
             openedMetric = metric

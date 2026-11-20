@@ -65,9 +65,18 @@ struct ChartOnly: View {
         let progressionData = get1RMProgression(for: lift)
         
         VStack(alignment: .leading, spacing: 12) {
-            Text(lift)
-                .font(.title2)
-                .bold()
+            HStack(alignment: .firstTextBaseline) {
+                Text(lift)
+                    .font(.title2)
+                    .bold()
+                Spacer()
+                NavigationLink {
+                    LiftHistoryView(lift: lift)
+                } label: {
+                    Label("History", systemImage: "list.bullet")
+                        .font(.subheadline.weight(.medium))
+                }
+            }
             
             if progressionData.isEmpty {
                 Text("Tick off your \(lift) sets and mark the training day complete to start tracking.")

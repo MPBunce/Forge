@@ -76,6 +76,8 @@ struct ForgeApp: App {
             }
             .preferredColorScheme(AppearanceMode(rawValue: appearance)?.colorScheme)
             .task { PlusStore.shared.start() }
+            // Sets up the rest timer early, so its Live Activity buttons work after a relaunch.
+            .task { _ = RestTimer.shared }
             .task {
                 guard showingSplash else { return }
                 try? await Task.sleep(for: .seconds(3))

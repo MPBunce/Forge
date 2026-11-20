@@ -16,6 +16,36 @@ struct LastSession {
     var topWeight: Double? { sets.compactMap(\.weight).max() }
 }
 
+/// Forge Plus: a note on a lift, shown every time it comes up.
+private struct NoteEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    let name: String
+    @State var text: String
+    let onSave: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Seat at 4, left shoulder: go light…", text: $text, axis: .vertical)
+                        .lineLimit(3...8)
+                } footer: {
+                    Text("Shows every time \(name) comes up, in any cycle.")
+                }
+            }
+            .navigationTitle("Note")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { onSave(text); dismiss() }.fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
 // MARK: - Main Exercise Detail View
 // Changes are written straight to the model as they happen, like the set status taps,
 // so there is no separate Save step that could be skipped or half-applied.
@@ -35,6 +65,12 @@ struct ExerciseDetailView: View {
     @State private var lastTime: LastSession? = nil
     /// The weight last logged for this lift, anywhere.
     @State private var lastWeight: Double?
+    /// Last time every set reached the top of its range, so the weight has gone up.
+    @State private var movedUpFrom: Double?
+    @State private var note: String?
+    @State private var editingNote = false
+    @State private var showingPlus = false
+    private var plus = ForgePlus.shared
     /// The best this lift had been before today's sets, to spot a new PB.
     @State private var previousBest: PersonalBests.Best?
 
@@ -50,6 +86,35 @@ struct ExerciseDetailView: View {
 
         ScrollView {
             LazyVStack(spacing: 0) {
+                if let note {
+                    Button { editingNote = true } label: {
+                        Label(note, systemImage: "note.text")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                    .padding(.bottom, 6)
+                }
+                if let line = progressionLine(sets) {
+                    Label(line, systemImage: "arrow.up.circle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.green)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.bottom, 6)
+                }
+                if plus.isActive, let steps = warmUp(sets), !steps.isEmpty {
+                    Text("Warm-up  " + steps.map { "\(WeightConverter.format($0.weight))×\($0.reps)" }.joined(separator: " · "))
+                        .font(.footnote.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.bottom, 4)
+                        .accessibilityLabel("Warm-up sets: " + steps.map { "\(WeightConverter.format($0.weight)) for \($0.reps)" }.joined(separator: ", "))
+                }
                 ExerciseSetsSection(
                     sets: sets,
                     pbSetID: pbSet(in: sets)?.persistentModelID,
@@ -63,6 +128,25 @@ struct ExerciseDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle(exercise?.name ?? "")
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    if plus.isActive { editingNote = true } else { showingPlus = true }
+                } label: {
+                    Image(systemName: note == nil ? "note.text.badge.plus" : "note.text")
+                }
+                .accessibilityLabel(note == nil ? "Add a note" : "Edit note")
+            }
+        }
+        .sheet(isPresented: $editingNote) {
+            NoteEditor(name: exercise?.name ?? "", text: note ?? "") { saved in
+                ExerciseNotes.setNote(saved, for: exercise?.name ?? "")
+                note = ExerciseNotes.note(for: exercise?.name ?? "")
+            }
+        }
+        .sheet(isPresented: $showingPlus) {
+            NavigationStack { ForgePlusView() }
+        }
         .onAppear(perform: loadWeightStep)
         .sheet(isPresented: $showingAddSetSheet) {
             AddSetView { weight, reps in
@@ -87,6 +171,7 @@ struct ExerciseDetailView: View {
         .environment(\.weightStart, weightStart)
         .environment(\.lastWeight, currentLastWeight)
         .environment(\.isBodyweight, isBodyweight)
+        .environment(\.showsRepRanges, usesRepRanges)
         .environment(\.restSeconds, restSeconds)
         .environment(\.barWeight, bar)
         .environment(\.smallestPlate, smallestPlate)
@@ -94,6 +179,29 @@ struct ExerciseDetailView: View {
     }
 
     private var isBodyweight: Bool { Bodyweight.isBodyweight(exercise?.name ?? "") }
+    private var usesRepRanges: Bool { Progression.usesRepRanges(cycle) }
+
+    /// Double progression news: going up today, or earned it with today's sets.
+    private func progressionLine(_ sets: [ExerciseSet]) -> String? {
+        guard usesRepRanges else { return nil }
+        if Progression.earnedIncrease(sets) {
+            return "Top of the range on every set. Go up next time."
+        }
+        if let from = movedUpFrom, !sets.contains(where: { $0.completionStatus != .notStarted }) {
+            return isBodyweight
+                ? "You hit the top of the range last time, so add a little weight today."
+                : "Up from \(WeightConverter.format(from)) \(cycle.weightUnit): you hit the top of the range last time."
+        }
+        return nil
+    }
+
+    /// Plus: ramp-up sets before the working weight, on the day's main lifts.
+    private func warmUp(_ sets: [ExerciseSet]) -> [WarmUp.Step]? {
+        guard let exercise, !isBodyweight, exercise.exerciseIndex <= 1 else { return nil }
+        let working = sets.compactMap(\.weight).max() ?? currentLastWeight ?? 0
+        guard working > 0 else { return nil }
+        return WarmUp.steps(to: working, bar: bar, smallest: smallestPlate, isBarbell: WarmUp.isBarbell(exercise.name))
+    }
 
     /// The last weight logged for this lift: earlier in today's sets, or in an earlier session.
     private var currentLastWeight: Double? {
@@ -121,7 +229,16 @@ struct ExerciseDetailView: View {
             let all = (try? context.fetch(FetchDescriptor<Cycles>())) ?? []
             previousBest = PersonalBests.best(for: exercise.name, in: all,
                                               excluding: Set(exercise.sets.map(\.persistentModelID)))
-            lastWeight = LastWeight.find(for: exercise, in: all, usesKilograms: cycle.usesKilograms)
+            note = ExerciseNotes.note(for: exercise.name)
+            if let last = LastWeight.lastSession(for: exercise, in: all, usesKilograms: cycle.usesKilograms) {
+                lastWeight = last.weight
+                // Double progression: every set at the top of its range last time, so go up a step.
+                // Only when that session was a rep-range program too (not a 5/3/1 AMRAP).
+                if usesRepRanges, Progression.usesRepRanges(last.cycle), Progression.earnedIncrease(last.sets) {
+                    movedUpFrom = last.weight
+                    lastWeight = last.weight + weightStep
+                }
+            }
         }
         // Bodyweight lifts start at no added weight, not an empty bar.
         weightStart = currentLastWeight ?? exercise?.orderedSets.compactMap(\.weight).last ?? lastTime?.topWeight
