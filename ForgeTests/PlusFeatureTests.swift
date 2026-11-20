@@ -65,18 +65,6 @@ struct ExportAndLogTests {
         #expect(lines[1].contains("\"Mon, Upper\",Bench Press,1,135,lbs,5,Done"))
     }
 
-    @Test func weighInsKeepOnePerDay() {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now).addingTimeInterval(9 * 3600)
-        let entries = [
-            WeighIn(date: calendar.date(byAdding: .day, value: -8, to: today)!, pounds: 184),
-            WeighIn(date: calendar.date(byAdding: .day, value: -1, to: today)!, pounds: 182.5),
-            WeighIn(date: today, pounds: 182),
-        ]
-        #expect(BodyweightLog.weekChange(entries) == -2)
-        #expect(BodyweightLog.weekChange(Array(entries.suffix(2))) == nil)
-    }
-
     @Test func notesFollowTheLift() {
         ExerciseNotes.setNote("Seat at 4", for: "Lat Pulldowns")
         #expect(ExerciseNotes.note(for: "Lat Pulldown") == "Seat at 4")

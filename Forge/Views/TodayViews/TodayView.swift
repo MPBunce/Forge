@@ -26,7 +26,6 @@ struct TodayView: View {
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 0))
                 TrainingSection(day: today)
                 StepsSection(steps: steps)
-                BodyweightSection()
                 DailyWorkSection(day: today)
                 StretchingSection(day: today)
                 ChallengesSection()
