@@ -84,3 +84,61 @@ struct ExportAndLogTests {
         #expect(ExerciseNotes.note(for: "Lat Pulldown") == nil)
     }
 }
+
+struct TrainingMaxSuggestionTests {
+    let settings = UserSettings(from: Settings.defaultSettings)
+    func cycle(_ type: ProgramType) -> Cycles {
+        Template.loadTemplates().first { $0.programType == type }!.createCycle(with: settings)
+    }
+    /// Logs every + set of a lift with the given reps.
+    func log(_ cycle: Cycles, lift: String, reps: Int) {
+        for exercise in cycle.trainingDays.flatMap(\.day)
+            where !exercise.canAlterSets && PersonalBests.key(exercise.name) == lift {
+            for set in exercise.sets where set.isAmrap {
+                set.reps = reps
+                set.completionStatus = .completedSuccessfully
+            }
+        }
+    }
+
+    @Test func fiveThreeOneHoldsWhenRepsAreMissed() {
+        let c = cycle(.fiveThreeOneBasicProgram)
+        log(c, lift: "squat", reps: 8)
+        log(c, lift: "benchpress", reps: 0)
+        let squat = TrainingMaxSuggestion.suggest(for: .squat, cycle: c, program: .fiveThreeOneBasicProgram, step: 5)
+        let bench = TrainingMaxSuggestion.suggest(for: .bench, cycle: c, program: .fiveThreeOneBasicProgram, step: 5)
+        #expect(squat.increase == 10)
+        #expect(bench.increase == 0)
+    }
+
+    @Test func nSunsScalesWithReps() {
+        let c = cycle(.nSuns4Days)
+        log(c, lift: "squat", reps: 7)
+        log(c, lift: "benchpress", reps: 3)
+        log(c, lift: "deadlift", reps: 1)
+        #expect(TrainingMaxSuggestion.suggest(for: .squat, cycle: c, program: .nSuns4Days, step: 5).increase == 15)
+        #expect(TrainingMaxSuggestion.suggest(for: .bench, cycle: c, program: .nSuns4Days, step: 5).increase == 5)
+        #expect(TrainingMaxSuggestion.suggest(for: .deadlift, cycle: c, program: .nSuns4Days, step: 5).increase == 0)
+    }
+
+    @Test func standardIncreaseWithoutLogs() {
+        let c = cycle(.fiveThreeOneBasicProgram)
+        #expect(TrainingMaxSuggestion.suggest(for: .press, cycle: c, program: .fiveThreeOneBasicProgram, step: 5).increase == 5)
+        #expect(TrainingMaxSuggestion.suggest(for: .deadlift, cycle: nil, program: .nSuns4Days, step: 5).increase == 10)
+    }
+
+    @Test func accessoriesProgressButMainLiftsDont() {
+        let c = cycle(.fiveThreeOneBasicProgram)
+        let all = c.trainingDays.flatMap(\.day)
+        let main = all.first { !$0.canAlterSets }
+        let accessory = all.first { $0.canAlterSets }
+        #expect(Progression.mode(for: main, in: c) == nil)
+        #expect(Progression.mode(for: accessory, in: c) == .straight)
+        let done = ExerciseSet(setIndex: 0, weight: 50, reps: 10, completionStatus: .completedSuccessfully)
+        let noWeight = ExerciseSet(setIndex: 1, weight: nil, reps: 10, completionStatus: .completedSuccessfully)
+        let failed = ExerciseSet(setIndex: 1, weight: 50, reps: 6, completionStatus: .failed)
+        #expect(Progression.earnedIncrease([done, done], mode: .straight))
+        #expect(!Progression.earnedIncrease([done, noWeight], mode: .straight))
+        #expect(!Progression.earnedIncrease([done, failed], mode: .straight))
+    }
+}

@@ -112,7 +112,7 @@ struct CyclesDetailView: View {
         List {
             if cycle.isCompleted, let template = Template.named(cycle.template) {
                 Section {
-                    CycleFinishedBanner(template: template) { dismiss() }
+                    CycleFinishedBanner(template: template, cycle: cycle) { dismiss() }
                 }
             }
             if let selectedDay = cycle.trainingDays.first(where: { $0.dayIndex == validSelectedDayIndex }) {

@@ -29,6 +29,35 @@ enum Progression {
         "\(target)–\(top(forTarget: target))"
     }
 
+    enum Mode {
+        /// Rep-range programs: every set at the top of its range.
+        case ranges
+        /// Accessories in training-max programs (and Greyskull's lifts): every set done,
+        /// with a weight logged, at the reps written.
+        case straight
+    }
+
+    /// How a lift progresses, or nil when the program's training maxes look after it
+    /// (5/3/1 and nSuns main lifts).
+    static func mode(for exercise: Exercise?, in cycle: Cycles) -> Mode? {
+        if usesRepRanges(cycle) { return .ranges }
+        guard let exercise, exercise.canAlterSets else { return nil }
+        return .straight
+    }
+
+    static func earnedIncrease(_ sets: [ExerciseSet], mode: Mode) -> Bool {
+        switch mode {
+        case .ranges:
+            return earnedIncrease(sets)
+        case .straight:
+            guard !sets.isEmpty else { return false }
+            return sets.allSatisfy { set in
+                set.completionStatus == .completedSuccessfully && set.weight != nil
+                    && (set.reps ?? 0) >= (set.amrapTargetReps ?? 0)
+            }
+        }
+    }
+
     /// Every ranged set done, each at the top of its range.
     static func earnedIncrease(_ sets: [ExerciseSet]) -> Bool {
         let ranged = sets.filter { $0.isAmrap && $0.amrapTargetReps != nil }

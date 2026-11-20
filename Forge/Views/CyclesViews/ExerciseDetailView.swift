@@ -171,7 +171,7 @@ struct ExerciseDetailView: View {
         .environment(\.weightStart, weightStart)
         .environment(\.lastWeight, currentLastWeight)
         .environment(\.isBodyweight, isBodyweight)
-        .environment(\.showsRepRanges, usesRepRanges)
+        .environment(\.showsRepRanges, progressionMode == .ranges)
         .environment(\.restSeconds, restSeconds)
         .environment(\.barWeight, bar)
         .environment(\.smallestPlate, smallestPlate)
@@ -181,16 +181,19 @@ struct ExerciseDetailView: View {
     private var isBodyweight: Bool { Bodyweight.isBodyweight(exercise?.name ?? "") }
     private var usesRepRanges: Bool { Progression.usesRepRanges(cycle) }
 
-    /// Double progression news: going up today, or earned it with today's sets.
+    private var progressionMode: Progression.Mode? { Progression.mode(for: exercise, in: cycle) }
+
+    /// Progression news: going up today, or earned it with today's sets.
     private func progressionLine(_ sets: [ExerciseSet]) -> String? {
-        guard usesRepRanges else { return nil }
-        if Progression.earnedIncrease(sets) {
-            return "Top of the range on every set. Go up next time."
+        guard let mode = progressionMode else { return nil }
+        if Progression.earnedIncrease(sets, mode: mode) {
+            return mode == .ranges ? "Top of the range on every set. Go up next time."
+                                   : "Every set done. Go up next time."
         }
         if let from = movedUpFrom, !sets.contains(where: { $0.completionStatus != .notStarted }) {
             return isBodyweight
                 ? "You hit the top of the range last time, so add a little weight today."
-                : "Up from \(WeightConverter.format(from)) \(cycle.weightUnit): you hit the top of the range last time."
+                : "Up from \(WeightConverter.format(from)) \(cycle.weightUnit): you got every rep last time."
         }
         return nil
     }
@@ -233,8 +236,11 @@ struct ExerciseDetailView: View {
             if let last = LastWeight.lastSession(for: exercise, in: all, usesKilograms: cycle.usesKilograms) {
                 lastWeight = last.weight
                 // Double progression: every set at the top of its range last time, so go up a step.
-                // Only when that session was a rep-range program too (not a 5/3/1 AMRAP).
-                if usesRepRanges, Progression.usesRepRanges(last.cycle), Progression.earnedIncrease(last.sets) {
+                // Judged by the rules of the cycle that session was in, so a 5/3/1 AMRAP
+                // never counts as topping out a rep range.
+                if progressionMode != nil,
+                   let lastMode = Progression.mode(for: last.sets.first?.exercise, in: last.cycle),
+                   Progression.earnedIncrease(last.sets, mode: lastMode) {
                     movedUpFrom = last.weight
                     lastWeight = last.weight + weightStep
                 }

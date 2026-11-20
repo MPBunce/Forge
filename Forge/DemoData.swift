@@ -79,7 +79,11 @@ enum DemoData {
                 for exercise in day.day {
                     for set in exercise.sets {
                         if set.reps == nil { set.reps = 10 }
-                        if set.isAmrap, let target = set.amrapTargetReps { set.reps = target + 3 }
+                        if set.isAmrap, let target = set.amrapTargetReps {
+                            // The older cycle missed reps on bench, so the next-cycle sheet shows a hold.
+                            let missed = scale < 1 && PersonalBests.key(exercise.name) == "benchpress"
+                            set.reps = missed ? max(target - 1, 0) : target + 3
+                        }
                         set.completionStatus = .completedSuccessfully
                     }
                 }

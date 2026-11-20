@@ -26,6 +26,55 @@ extension Template {
     }
 }
 
+/// How much to raise a training max, from the finished cycle's AMRAP sets.
+/// 5/3/1: the standard increase if you got the reps on the + sets, otherwise hold.
+/// nSuns: by reps on the heaviest + set: 0–1 hold, 2–3 a little, 4–5 more, 6+ the most.
+enum TrainingMaxSuggestion {
+    struct Suggestion: Equatable {
+        let increase: Double
+        let reason: String
+    }
+
+    /// Names each lift goes by in the programs (normalised).
+    static func keys(for lift: NextCycleSheet.Lift) -> Set<String> {
+        switch lift {
+        case .squat: ["squat"]
+        case .bench: ["benchpress", "bench"]
+        case .deadlift: ["deadlift"]
+        case .press: ["overheadpress", "press", "ohp"]
+        }
+    }
+
+    static func suggest(for lift: NextCycleSheet.Lift, cycle: Cycles?, program: ProgramType, step: Double) -> Suggestion {
+        let small = step
+        let large = lift.isLower ? step * 2 : step
+        let standard = Suggestion(increase: large, reason: "Standard increase")
+        guard let cycle else { return standard }
+        let keys = keys(for: lift)
+        // The training-max sets for this lift: + sets with reps logged.
+        let plusSets = cycle.trainingDays.flatMap(\.day)
+            .filter { !$0.canAlterSets && keys.contains(PersonalBests.key($0.name)) }
+            .flatMap(\.sets)
+            .filter { $0.isAmrap && $0.amrapTargetReps != nil && $0.completionStatus != .notStarted && $0.reps != nil }
+        guard let top = plusSets.max(by: { ($0.weight ?? 0, $0.reps ?? 0) < ($1.weight ?? 0, $1.reps ?? 0) }),
+              let reps = top.reps, let target = top.amrapTargetReps else {
+            return Suggestion(increase: large, reason: "No + sets logged, so the standard increase")
+        }
+        let at = top.weight.map { " at \(WeightConverter.format($0))" } ?? ""
+        let done = "\(reps) on the \(target)+ set\(at)"
+        switch program {
+        case .nSuns4Days, .nSuns5Days, .nSuns6DaysSquat, .nSuns6DaysDeadlift:
+            if reps <= 1 { return Suggestion(increase: 0, reason: "\(done): hold") }
+            if reps <= 3 { return Suggestion(increase: small, reason: done) }
+            if reps <= 5 { return Suggestion(increase: large, reason: done) }
+            return Suggestion(increase: lift.isLower ? step * 3 : step * 2, reason: done)
+        default:
+            if reps < target { return Suggestion(increase: 0, reason: "\(done): missed, so hold") }
+            return Suggestion(increase: large, reason: done)
+        }
+    }
+}
+
 struct NextCycleSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -33,7 +82,10 @@ struct NextCycleSheet: View {
     @Query private var cycles: [Cycles]
 
     let template: Template
+    /// The finished cycle, to base the increases on.
+    var cycle: Cycles? = nil
     var onStart: () -> Void = {}
+    @State private var reasons: [Lift: String] = [:]
 
     /// New training maxes in the lifter's unit, keyed by lift.
     @State private var maxes: [Lift: Double] = [:]
@@ -58,6 +110,7 @@ struct NextCycleSheet: View {
                     Section {
                         ForEach(Lift.allCases) { lift in
                             Stepper(value: binding(for: lift), in: 0...2000, step: step) {
+                                VStack(alignment: .leading, spacing: 2) {
                                 HStack {
                                     Text(lift.rawValue)
                                         .lineLimit(1)
@@ -70,12 +123,18 @@ struct NextCycleSheet: View {
                                 }
                                 .monospacedDigit()
                                 .lineLimit(1)
+                                if let reason = reasons[lift] {
+                                    Text(reason)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                }
                             }
                         }
                     } header: {
                         Text("New Training Maxes")
                     } footer: {
-                        Text("The standard progression: +\(WeightConverter.format(step)) \(unit) on bench and press, +\(WeightConverter.format(step * 2)) \(unit) on squat and deadlift. If you missed reps on a lift's last set, keep it where it was.")
+                        Text("Suggested from your + sets this cycle. Adjust any of them before you start.")
                     }
                 } else {
                     Section {
@@ -128,8 +187,10 @@ struct NextCycleSheet: View {
     private func load() {
         guard maxes.isEmpty else { return }
         for lift in Lift.allCases {
+            let suggestion = TrainingMaxSuggestion.suggest(for: lift, cycle: cycle, program: template.programType, step: step)
             previous[lift] = current(lift)
-            maxes[lift] = current(lift) + (lift.isLower ? step * 2 : step)
+            maxes[lift] = current(lift) + suggestion.increase
+            reasons[lift] = suggestion.reason
         }
     }
 
@@ -163,6 +224,7 @@ struct NextCycleSheet: View {
 /// Shown at the top of a finished cycle.
 struct CycleFinishedBanner: View {
     let template: Template
+    var cycle: Cycles? = nil
     var onStart: () -> Void
 
     @State private var showingNext = false
@@ -173,7 +235,7 @@ struct CycleFinishedBanner: View {
                 .font(.headline)
                 .foregroundStyle(.green)
             Text(template.programType.usesTrainingMaxes
-                 ? "Raise your training maxes and start the next cycle."
+                 ? "See how much to raise each training max, then start the next cycle."
                  : "Start the next round of \(template.name).")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -190,7 +252,7 @@ struct CycleFinishedBanner: View {
         }
         .padding(.vertical, 6)
         .sheet(isPresented: $showingNext) {
-            NextCycleSheet(template: template, onStart: onStart)
+            NextCycleSheet(template: template, cycle: cycle, onStart: onStart)
         }
     }
 }
